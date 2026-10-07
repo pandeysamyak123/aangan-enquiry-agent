@@ -1,0 +1,30 @@
+{
+  "name": "aangan-enquiry-agent",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "node --test lib/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "setup:hubspot": "node --env-file=.env.local scripts/setup-hubspot.ts",
+    "simulate": "node --env-file=.env.local scripts/simulate-call.ts"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
+    "next": "^15.5.27",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^5.9.3"
+  }
+}
