@@ -6,7 +6,7 @@ import { route, type Verdict } from './routing.ts';
 import { isAfterHours, promiseFor, fmtIst } from './hours.ts';
 import { estimateCostPaise, normalisePhone, type ParsedCall } from './vaani.ts';
 import * as hubspot from './hubspot.ts';
-import { emailEnabled, sendEmail } from './email.ts';
+import { emailEnabled, sendEmail, designerRecipients } from './email.ts';
 import { handoffEmail, alertEmail, callerEmail, type CallFacts } from './emails.ts';
 import { calendlyEnabled, singleUseLink } from './calendly.ts';
 
@@ -128,19 +128,20 @@ export async function handleCall(call: ParsedCall, eventId: string): Promise<Pip
   await run('email', emailEnabled(), async () => {
     const sent: string[] = [];
     const list = (s?: string) => (s ?? '').split(',').map((x) => x.trim()).filter(Boolean);
-    if (verdict.route === 'QUALIFIED' && !lead.handoff_email_id && list(process.env.DESIGNERS_EMAIL).length) {
-      const id = await sendEmail({ to: list(process.env.DESIGNERS_EMAIL), ...handoffEmail(facts) });
+    const designers = await designerRecipients();
+    if (verdict.route === 'QUALIFIED' && !lead.handoff_email_id && designers.length) {
+      const id = await sendEmail({ to: designers, ...handoffEmail(facts), kind: 'handoff', leadId: lead.id, callId: callRow.id });
       await db().from('leads').update({ handoff_email_id: id }).eq('id', lead.id);
       sent.push('designers');
     }
     const alertTo = list(process.env.FRONT_DESK_EMAIL || process.env.NIKHIL_EMAIL);
     if (alertTo.length && (verdict.route === 'ESCALATE' || verdict.mismatch || ['MISSED', 'INCOMPLETE'].includes(verdict.route))) {
       const to = verdict.route === 'ESCALATE' ? [...new Set([...alertTo, ...list(process.env.NIKHIL_EMAIL)])] : alertTo;
-      await sendEmail({ to, ...alertEmail(facts) });
+      await sendEmail({ to, ...alertEmail(facts), kind: 'alert', leadId: lead.id, callId: callRow.id });
       sent.push('front desk');
     }
     if (verdict.route === 'QUALIFIED' && d.caller_email && bookingLink) {
-      await sendEmail({ to: d.caller_email, ...callerEmail(d.caller_name, bookingLink) });
+      await sendEmail({ to: d.caller_email, ...callerEmail(d.caller_name, bookingLink), kind: 'caller', leadId: lead.id, callId: callRow.id });
       sent.push('caller');
     }
     return sent.length ? `sent to ${sent.join(', ')}` : 'nothing to send for this route';

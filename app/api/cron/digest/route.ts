@@ -22,6 +22,6 @@ export async function GET(req: Request) {
   const flagged = calls.filter((c) => ['DECLINED', 'NURTURE'].includes(c.route) || c.mismatch) as DigestCall[];
   const cost = calls.reduce((s, c) => s + (c.cost_paise ?? 0), 0) / 100;
   const to = (process.env.NIKHIL_EMAIL || '').split(',').map((s) => s.trim()).filter(Boolean);
-  if (emailEnabled() && to.length && calls.length) await sendEmail({ to, ...digestEmail(day, stats, flagged, cost) });
+  if (emailEnabled() && to.length && calls.length) await sendEmail({ to, ...digestEmail(day, stats, flagged, cost), kind: 'digest' });
   return NextResponse.json({ day, stats, flagged: flagged.length, cost_inr: cost, emailed: calls.length > 0 && to.length > 0 });
 }

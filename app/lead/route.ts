@@ -3,7 +3,7 @@ import { verifyAction, type LeadAction } from '@/lib/links.ts';
 import { db } from '@/lib/db.ts';
 import { fmtIst } from '@/lib/hours.ts';
 import { esc } from '@/lib/emails.ts';
-import * as hubspot from '@/lib/hubspot.ts';
+import { applyLeadAction } from '@/lib/leadActions.ts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -58,29 +58,8 @@ export async function POST(req: Request) {
   if (!lead) return page('Lead not found', '<p>This enquiry no longer exists.</p>', 404);
   const now = new Date().toISOString();
 
-  if (ok.action === 'claim' && lead.claimed_by_name && lead.claimed_by_name !== who) {
-    return page('Already claimed', `<p><b>${esc(lead.claimed_by_name)}</b> claimed this lead ${fmtIst(lead.claimed_at)}.</p>`, 409);
-  }
-
-  const update: Record<string, unknown> = { updated_at: now };
-  let stage: Parameters<typeof hubspot.setDealStage>[1] | undefined;
-  switch (ok.action) {
-    case 'claim': Object.assign(update, { status: 'claimed', claimed_by_name: who, claimed_at: now }); stage = 'HUBSPOT_STAGE_CLAIMED'; break;
-    case 'called': Object.assign(update, { status: lead.status === 'booked' ? 'booked' : 'called', called_at: now, claimed_by_name: lead.claimed_by_name ?? (who !== 'someone' ? who : null), claimed_at: lead.claimed_at ?? now }); break;
-    case 'booked': Object.assign(update, { status: 'booked', booked_at: now }); stage = 'HUBSPOT_STAGE_BOOKED'; break;
-    case 'notfit': Object.assign(update, { status: 'not_fit' }); stage = 'HUBSPOT_STAGE_NOT_FIT'; break;
-    case 'showed': Object.assign(update, { status: 'consulted', showed_up: true }); break;
-    case 'noshow': Object.assign(update, { showed_up: false }); break;
-    case 'won': Object.assign(update, { status: 'won', project_value_inr: Number(String(form.get('value') ?? '').replace(/[^\d]/g, '')) || null }); break;
-    case 'lost': Object.assign(update, { status: 'lost' }); break;
-    case 'reviewed': break;
-  }
-  const { error } = await db().from('leads').update(update).eq('id', lead.id);
-  if (error) return page('Something went wrong', `<p>${esc(error.message)}</p>`, 500);
-  await db().from('lead_actions').insert({ lead_id: lead.id, actor: who, action: ok.action });
-
-  if (stage && lead.hubspot_deal_id && hubspot.hubspotEnabled()) {
-    try { await hubspot.setDealStage(lead.hubspot_deal_id, stage); } catch (e) { console.error('[lead] hubspot', e); }
-  }
+  const value = Number(String(form.get('value') ?? '').replace(/[^\d]/g, '')) || null;
+  const r = await applyLeadAction(lead.id, ok.action, who, { value });
+  if (!r.ok) return page(r.message.startsWith('Already') ? 'Already claimed' : 'Something went wrong', `<p>${esc(r.message)}</p>`, r.message.startsWith('Already') ? 409 : 500);
   return page('Done ✓', `<p>${esc(LABEL[ok.action])}: recorded for <b>${esc(lead.name ?? 'the caller')}</b>${who !== 'someone' ? ` by ${esc(who)}` : ''}.</p><p style="color:#6b6b6b;font-size:14px">You can close this page.</p>`);
 }

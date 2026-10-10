@@ -22,7 +22,7 @@ export async function GET(req: Request) {
   const leads = (data ?? []) as OverdueLead[];
   if (!leads.length) return NextResponse.json({ overdue: 0 });
   const to = (process.env.NIKHIL_EMAIL || process.env.FRONT_DESK_EMAIL || '').split(',').map((s) => s.trim()).filter(Boolean);
-  if (emailEnabled() && to.length) await sendEmail({ to, ...overdueEmail(leads) });
+  if (emailEnabled() && to.length) await sendEmail({ to, ...overdueEmail(leads), kind: 'overdue' });
   const now = new Date().toISOString();
   await db().from('leads').update({ overdue_alerted_at: now }).in('id', leads.map((l) => l.id));
   await db().from('lead_actions').insert(leads.map((l) => ({ lead_id: l.id, actor: 'system', action: 'overdue_alert' })));
