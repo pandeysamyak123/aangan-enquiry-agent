@@ -1,19 +1,19 @@
-// One call in → route → Supabase → HubSpot → Calendly link → Telegram / email.
+// One call in → route → Supabase → HubSpot → Calendly link → email (Resend).
 // Each outbound integration is optional (skipped until its env vars are set) and failure-isolated:
-// a HubSpot outage must never stop the designer getting the Telegram card.
+// a HubSpot outage must never stop the designer getting the handoff email.
 import { db } from './db.ts';
 import { route, type Verdict } from './routing.ts';
 import { isAfterHours, promiseFor, fmtIst } from './hours.ts';
 import { estimateCostPaise, normalisePhone, type ParsedCall } from './vaani.ts';
 import * as hubspot from './hubspot.ts';
-import * as telegram from './telegram.ts';
 import { emailEnabled, sendEmail } from './email.ts';
+import { handoffEmail, alertEmail, callerEmail, type CallFacts } from './emails.ts';
 import { calendlyEnabled, singleUseLink } from './calendly.ts';
 
 const OPEN_STATUSES = ['new', 'claimed', 'called', 'booked'];
 const REDIAL_WINDOW_MS = 30 * 60_000;
 
-type Lead = { id: string; phone: string | null; name: string | null; route: string; status: string; created_at: string; hubspot_contact_id: string | null; hubspot_deal_id: string | null; telegram_message_id: number | null };
+type Lead = { id: string; phone: string | null; name: string | null; route: string; status: string; created_at: string; hubspot_contact_id: string | null; hubspot_deal_id: string | null; handoff_email_id: string | null };
 
 export type PipelineResult = { leadId: string; callId: string; verdict: Verdict; returning: boolean; merged: boolean; steps: Record<string, string> };
 
@@ -122,78 +122,30 @@ export async function handleCall(call: ParsedCall, eventId: string): Promise<Pip
     return 'link created';
   });
 
-  // Telegram: designers get qualified leads; Nikhil gets escalations, mismatches and call-backs.
-  await run('telegram', telegram.telegramEnabled(), async () => {
-    const sent: string[] = [];
-    if (verdict.route === 'QUALIFIED' && !lead.telegram_message_id && process.env.TELEGRAM_DESIGNERS_CHAT_ID) {
-      const id = await telegram.sendMessage(process.env.TELEGRAM_DESIGNERS_CHAT_ID, leadCard(call, verdict, phone, afterHours, promiseAt, bookingLink), telegram.leadButtons(lead.id, 'new', call.recordingUrl));
-      await db().from('leads').update({ telegram_message_id: id }).eq('id', lead.id);
-      sent.push('designers');
-    }
-    const nikhil = process.env.TELEGRAM_NIKHIL_CHAT_ID;
-    if (nikhil && (verdict.route === 'ESCALATE' || verdict.mismatch || ['MISSED', 'INCOMPLETE'].includes(verdict.route))) {
-      await telegram.sendMessage(nikhil, alertCard(call, verdict, phone, promiseAt));
-      sent.push('nikhil');
-    }
-    return sent.length ? `sent to ${sent.join(', ')}` : 'nothing to send for this route';
-  });
-
-  // Email: caller gets their booking link (if they gave an email); designers get a copy of the card.
+  // Email (Resend): designers get qualified leads with one-tap actions; front desk / Nikhil get
+  // escalations, agent-vs-rules mismatches and call-backs; the caller gets their booking link.
+  const facts: CallFacts = { d, v: verdict, phone, at, afterHours, promiseAt, summary: call.summary, recordingUrl: call.recordingUrl, bookingLink, leadId: lead.id, durationSec: call.durationSec };
   await run('email', emailEnabled(), async () => {
     const sent: string[] = [];
-    if (verdict.route === 'QUALIFIED' && d.caller_email && bookingLink) {
-      await sendEmail({ to: d.caller_email, subject: 'Your free design consultation with Aangan Studio', html: callerEmail(d.caller_name, bookingLink) });
-      sent.push('caller');
-    }
-    if (verdict.route === 'QUALIFIED' && process.env.DESIGNERS_EMAIL) {
-      await sendEmail({ to: process.env.DESIGNERS_EMAIL.split(','), subject: `New lead: ${d.caller_name ?? 'caller'} · ${d.property ?? ''} ${d.location_area ?? ''}`, html: `<pre style="font-family:inherit;white-space:pre-wrap">${leadCard(call, verdict, phone, afterHours, promiseAt, bookingLink)}</pre>` });
+    const list = (s?: string) => (s ?? '').split(',').map((x) => x.trim()).filter(Boolean);
+    if (verdict.route === 'QUALIFIED' && !lead.handoff_email_id && list(process.env.DESIGNERS_EMAIL).length) {
+      const id = await sendEmail({ to: list(process.env.DESIGNERS_EMAIL), ...handoffEmail(facts) });
+      await db().from('leads').update({ handoff_email_id: id }).eq('id', lead.id);
       sent.push('designers');
+    }
+    const alertTo = list(process.env.FRONT_DESK_EMAIL || process.env.NIKHIL_EMAIL);
+    if (alertTo.length && (verdict.route === 'ESCALATE' || verdict.mismatch || ['MISSED', 'INCOMPLETE'].includes(verdict.route))) {
+      const to = verdict.route === 'ESCALATE' ? [...new Set([...alertTo, ...list(process.env.NIKHIL_EMAIL)])] : alertTo;
+      await sendEmail({ to, ...alertEmail(facts) });
+      sent.push('front desk');
+    }
+    if (verdict.route === 'QUALIFIED' && d.caller_email && bookingLink) {
+      await sendEmail({ to: d.caller_email, ...callerEmail(d.caller_name, bookingLink) });
+      sent.push('caller');
     }
     return sent.length ? `sent to ${sent.join(', ')}` : 'nothing to send for this route';
   });
 
   await db().from('lead_actions').insert({ lead_id: lead.id, actor: 'system', action: `call_${verdict.route.toLowerCase()}`, detail: { call_id: callRow.id, steps } });
   return { leadId: lead.id, callId: callRow.id, verdict, returning, merged: !!existing, steps };
-}
-
-const ROUTE_BADGE: Record<string, string> = { QUALIFIED: '🟢 NEW LEAD · Qualified', ESCALATE: '🔴 ESCALATION · Existing client', MISSED: '⚪ MISSED CALL', INCOMPLETE: '🟡 DROPPED CALL', DECLINED: '⚫ Declined', NURTURE: '🔵 Nurture' };
-
-function leadCard(call: ParsedCall, v: Verdict, phone: string | undefined, afterHours: boolean, promiseAt: Date | null, bookingLink?: string) {
-  const d = call.input.data ?? {};
-  const e = telegram.esc;
-  const lines = [
-    `<b>${ROUTE_BADGE[v.route] ?? v.route}</b> · ${fmtIst(call.endedAt)}${afterHours ? ' (after hours)' : ''}`,
-    `<b>${e(d.caller_name ?? 'Name not given')}</b> · ${e(phone ?? 'number not captured')}${d.preferred_callback_time ? ` · call back: ${e(d.preferred_callback_time)}` : ''}`,
-    `${e(d.property ?? '')} · ${e(d.location_area ?? '')}${d.carpet_area_sqft ? ` · ~${e(d.carpet_area_sqft)} sq ft` : ''}`,
-    d.scope ? `Scope: “${e(d.scope)}”` : '',
-    `Execution: ${e(d.execution_wanted ?? '?')} · State: ${e(d.current_state ?? '—')} · Needed by: ${e(d.timeline ?? '—')}`,
-    `Decision: ${e(d.caller_role ?? '—')} · Budget: ${e(d.budget_volunteered || 'not mentioned')}`,
-    d.referral_source ? `Source: ${e(d.referral_source)}` : '',
-    d.notes_for_designer ? `Note: ${e(d.notes_for_designer)}` : '',
-    d.booked_slot ? `📅 Booked on call: ${fmtIst(d.booked_slot)}` : bookingLink ? `📅 Booking link sent to caller` : '',
-    ...v.flags.map((f) => `⚑ ${e(f)}`),
-    promiseAt ? `⏱ Promise: call by ${fmtIst(promiseAt)}` : '',
-  ];
-  return lines.filter(Boolean).join('\n');
-}
-
-function alertCard(call: ParsedCall, v: Verdict, phone: string | undefined, promiseAt: Date | null) {
-  const d = call.input.data ?? {};
-  const e = telegram.esc;
-  return [
-    `<b>${ROUTE_BADGE[v.route] ?? v.route}${v.mismatch ? ' · ⚠ REVIEW' : ''}</b> · ${fmtIst(call.endedAt)}`,
-    `${e(d.caller_name ?? 'Unknown caller')} · ${e(phone ?? 'number masked — see Vaani call log')}`,
-    d.escalation_detail ? `Issue: ${e(d.escalation_detail)}` : '',
-    call.summary ? `Summary: ${e(call.summary)}` : '',
-    ...v.flags.map((f) => `⚑ ${e(f)}`),
-    promiseAt ? `⏱ Promise: by ${fmtIst(promiseAt)}` : '',
-  ].filter(Boolean).join('\n');
-}
-
-function callerEmail(name: string | undefined, link: string) {
-  return `<p>Hi ${telegram.esc(name ?? 'there')},</p>
-<p>Thank you for calling Aangan Studio. As promised, here is your link to pick a time for your free design consultation:</p>
-<p><a href="${link}" style="background:#2f5d50;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Choose a consultation time</a></p>
-<p>Your designer will also call you to introduce themselves. The consultation is free and there's no obligation.</p>
-<p>— Aangan Studio, Pune</p>`;
 }

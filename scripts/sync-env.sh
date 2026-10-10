@@ -7,7 +7,7 @@ SCOPE=mesa-cd25
 v() { npx --yes vercel@latest "$@" --scope "$SCOPE"; }
 
 for name in "$@"; do
-  value=$(grep -E "^${name}=" .env.local | head -1 | cut -d= -f2- || true)
+  value=$(grep -E "^${name}=" .env.local | head -1 | cut -d= -f2- | sed -e "s/^\"//" -e "s/\"$//" || true)
   if [ -z "$value" ]; then echo "  $name: empty in .env.local, skipped"; continue; fi
   for target in production preview; do
     v env rm "$name" "$target" --yes >/dev/null 2>&1 || true

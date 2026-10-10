@@ -10,8 +10,8 @@ export async function GET() {
     db: error ? `error: ${error.message}` : `ok (${count} calls)`,
     vaani: !!process.env.VAANI_WEBHOOK_SECRET,
     hubspot: !!process.env.HUBSPOT_TOKEN && !!process.env.HUBSPOT_PIPELINE_ID,
-    telegram: !!process.env.TELEGRAM_BOT_TOKEN,
-    resend: !!process.env.RESEND_API_KEY,
+    email: !!process.env.RESEND_API_KEY && !!process.env.DESIGNERS_EMAIL && !!process.env.LINK_SECRET,
+    vaani_api: !!process.env.VAANI_API_KEY,
     calendly: !!process.env.CALENDLY_TOKEN,
   });
 }
