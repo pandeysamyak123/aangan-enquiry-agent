@@ -10,7 +10,8 @@
     "test": "node --test lib/*.test.ts",
     "typecheck": "tsc --noEmit",
     "setup:hubspot": "node --env-file=.env.local scripts/setup-hubspot.ts",
-    "simulate": "node --env-file=.env.local scripts/simulate-call.ts"
+    "simulate": "node --env-file=.env.local scripts/simulate-call.ts",
+    "vaani:agent": "node --env-file=.env.local scripts/vaani-agent.ts"
   },
   "engines": {
     "node": ">=22.18"
