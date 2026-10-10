@@ -2,7 +2,6 @@
 import Link from 'next/link';
 import { loadDashboard, GROUPS, DECLINE_LABEL, ROUTE_LABEL, STATUS_LABEL, type RangeDays, type LeadRow } from '@/lib/metrics.ts';
 import { fmtIst } from '@/lib/hours.ts';
-import { actionUrl, type LeadAction } from '@/lib/links.ts';
 import CallsChart from './CallsChart.tsx';
 
 export const dynamic = 'force-dynamic';
@@ -11,6 +10,11 @@ export const metadata = { title: 'Dashboard · Aangan Enquiries' };
 const inr = (n: number | null | undefined, dp = 0) => (n === null || n === undefined ? '—' : '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: dp, minimumFractionDigits: dp }));
 const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)}%` : '—');
 const dur = (m: number | null) => (m === null ? '—' : m < 60 ? `${Math.round(m)} min` : m < 1440 ? `${(m / 60).toFixed(1)} h` : `${(m / 1440).toFixed(1)} d`);
+
+// Public page: never show full phone numbers.
+const maskPhone = (p: string | null) => (p ? `${p.slice(0, 3)} ••••• •${p.slice(-4)}` : '');
+// Summaries can contain numbers or emails the caller said aloud.
+const redact = (t: string | null) => (t ?? '').replace(/\+?\d[\d\s-]{7,}\d/g, (m) => '••••• ' + m.replace(/\D/g, '').slice(-4)).replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '[email]');
 
 const ROUTE_COLOR: Record<string, string> = { QUALIFIED: 'var(--s-qualified)', NURTURE: 'var(--s-nurture)', DECLINED: 'var(--s-declined)' };
 
@@ -28,10 +32,6 @@ function LeadStatus({ l }: { l: LeadRow }) {
   return <span className="status" style={{ color: 'var(--ink-2)' }}>● {STATUS_LABEL[l.status] ?? l.status}</span>;
 }
 
-const NEXT: Record<string, LeadAction[]> = {
-  new: ['claim', 'called'], claimed: ['called', 'notfit'], called: ['booked', 'notfit'], booked: ['showed', 'noshow'], consulted: ['won', 'lost'],
-};
-const ACTION_LABEL: Partial<Record<LeadAction, string>> = { claim: 'Claim', called: 'Called', booked: 'Booked', notfit: 'Not a fit', showed: 'Showed up', noshow: 'No-show', won: 'Won', lost: 'Lost', reviewed: 'Reviewed' };
 
 function Tile({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: 'critical' }) {
   return (
@@ -92,7 +92,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
               </div>
             </div>
           ))}
-          <p className="muted" style={{ fontSize: 13, margin: '10px 0 0' }}>Won value: <b className="num" style={{ color: 'var(--ink)' }}>{inr(m.cost.wonValue)}</b>. Designers update stages from the buttons in each lead email.</p>
+          <p className="muted" style={{ fontSize: 13, margin: '10px 0 0' }}>Won value: <b className="num" style={{ color: 'var(--ink)' }}>{inr(m.cost.wonValue)}</b>. Designers update stages from the buttons in each lead email (Claim, Called, Booked, Showed up, Won).</p>
         </section>
 
         <section className="card" aria-label="Cost and return">
@@ -116,17 +116,16 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       <div className="section-title"><h2>Needs attention</h2><span className="muted">callers promised a callback</span></div>
       <div className="card scroll-x">
         <table className="data">
-          <thead><tr><th>Caller</th><th>Route</th><th>Promised by</th><th>Owner</th><th>Status</th><th className="hide-sm">Action</th></tr></thead>
+          <thead><tr><th>Caller</th><th>Route</th><th>Promised by</th><th>Owner</th><th>Status</th></tr></thead>
           <tbody>
-            {m.speed.waiting.length === 0 && <tr><td colSpan={6} className="muted">Nobody is waiting. 🎉</td></tr>}
+            {m.speed.waiting.length === 0 && <tr><td colSpan={5} className="muted">Nobody is waiting. 🎉</td></tr>}
             {m.speed.waiting.map((l) => (
               <tr key={l.id}>
-                <td><b>{l.name ?? 'Caller'}</b><div className="muted num" style={{ fontSize: 13 }}>{l.phone ?? ''}</div></td>
+                <td><b>{l.name ?? 'Caller'}</b><div className="muted num" style={{ fontSize: 13 }}>{maskPhone(l.phone)}</div></td>
                 <td><RoutePill route={l.route} /></td>
                 <td className="num">{fmtIst(l.promise_at)}</td>
                 <td>{l.claimed_by_name ?? <span className="muted">Unclaimed</span>}</td>
                 <td><LeadStatus l={l} /></td>
-                <td className="hide-sm">{(NEXT[l.status] ?? []).map((a) => <a key={a} href={actionUrl(l.id, a)} className="btn" style={{ padding: '4px 9px', fontSize: 12, marginRight: 6 }}>{ACTION_LABEL[a]}</a>)}</td>
               </tr>
             ))}
           </tbody>
@@ -158,7 +157,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
                 {c.mismatch && <span className="status" style={{ color: 'var(--critical)' }}>⚠ Agent disagreed</span>}
                 <span className="muted" style={{ fontSize: 13 }}>{fmtIst(c.created_at)}</span>
               </div>
-              <div className="ink-2" style={{ fontSize: 13 }}>{DECLINE_LABEL[c.decline_reason ?? ''] ?? ''}{c.collected?.location_area ? ` · ${c.collected.location_area}` : ''}{c.collected?.scope ? ` · ${c.collected.scope}` : ''}</div>
+              <div className="ink-2" style={{ fontSize: 13 }}>{DECLINE_LABEL[c.decline_reason ?? ''] ?? ''}{c.collected?.location_area ? ` · ${c.collected.location_area}` : ''}{c.collected?.scope ? ` · ${redact(c.collected.scope)}` : ''}</div>
             </div>
           ))}
         </section>
@@ -175,7 +174,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
                 <td className="num" style={{ whiteSpace: 'nowrap' }}>{fmtIst(c.created_at)}{c.after_hours && <div className="muted" style={{ fontSize: 12 }}>after hours</div>}</td>
                 <td><b>{c.collected?.caller_name ?? '—'}</b><div className="muted" style={{ fontSize: 13 }}>{[c.collected?.property, c.collected?.location_area].filter(Boolean).join(' · ')}</div></td>
                 <td><RoutePill route={c.route} />{c.flags?.length > 0 && <div className="muted" style={{ fontSize: 12, marginTop: 3 }}>{c.flags.slice(0, 2).join(' · ')}</div>}</td>
-                <td className="hide-sm ink-2" style={{ fontSize: 13, maxWidth: 360 }}>{c.summary ?? '—'}{c.recording_url && <> · <a href={c.recording_url}>recording</a></>}</td>
+                <td className="hide-sm ink-2" style={{ fontSize: 13, maxWidth: 360 }}>{redact(c.summary) || '—'}{c.recording_url && <> · <a href={c.recording_url}>recording</a></>}</td>
                 <td className="num">{c.duration_sec ? `${Math.floor(c.duration_sec / 60)}:${String(c.duration_sec % 60).padStart(2, '0')}` : '—'}</td>
                 <td className="num">{inr((c.cost_paise ?? 0) / 100, 2)}</td>
               </tr>
