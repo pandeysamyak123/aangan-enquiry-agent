@@ -111,7 +111,11 @@ export default function Receptionist() {
     } catch (e) {
       cleanup();
       setPhase('error');
-      setError(e instanceof Error ? e.message : 'Something went wrong');
+      const msg = e instanceof Error ? `${e.name} ${e.message}` : '';
+      setError(/NotAllowed|Permission|denied/i.test(msg)
+        ? 'Please allow microphone access in your browser to talk to Meera.'
+        : /NotFound|device/i.test(msg) ? 'No microphone found. Plug one in or use your phone.'
+        : e instanceof Error ? e.message : 'Something went wrong');
     }
   }
 
