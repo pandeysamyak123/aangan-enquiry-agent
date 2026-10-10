@@ -28,7 +28,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
       </header>
       <aside className="side" aria-label="CRM navigation">
         <SideNav overdue={overdue} />
-        <div className="side-foot">Meera · Vaani AI<br /><a href="/logout">Sign out</a></div>
+        <div className="side-foot">Meera · Vaani AI<br /><a href="/">Back to website</a></div>
       </aside>
       <main className="main">{children}</main>
     </div>

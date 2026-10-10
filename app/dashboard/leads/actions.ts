@@ -5,14 +5,8 @@ import { db } from '@/lib/db.ts';
 import * as hubspot from '@/lib/hubspot.ts';
 import { applyLeadAction } from '@/lib/leadActions.ts';
 import { LEAD_ACTIONS, type LeadAction } from '@/lib/links.ts';
-import { SESSION_COOKIE, validSession } from '@/lib/session.ts';
-
-async function requireSession() {
-  if (!(await validSession((await cookies()).get(SESSION_COOKIE)?.value))) throw new Error('Not signed in');
-}
 
 export async function leadAction(formData: FormData) {
-  await requireSession();
   const leadId = String(formData.get('leadId'));
   const action = String(formData.get('action')) as LeadAction;
   if (!LEAD_ACTIONS.includes(action)) throw new Error('Unknown action');
@@ -25,7 +19,6 @@ export async function leadAction(formData: FormData) {
 }
 
 export async function saveNotes(formData: FormData) {
-  await requireSession();
   const leadId = String(formData.get('leadId'));
   const notes = String(formData.get('notes') ?? '').slice(0, 5000);
   await db().from('leads').update({ notes, updated_at: new Date().toISOString() }).eq('id', leadId);
