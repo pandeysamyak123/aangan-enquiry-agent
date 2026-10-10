@@ -1,300 +1,225 @@
 <title>Aangan Components Map</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one landscape sheet per page; the map spans the sheet, the component table follows. Print-first, single light theme by choice. */
+/* Layout: swimlane matrix. Rows are actors, columns are the six stages; numbered cards sit in their cell and dashed connectors (drawn after layout) follow the call. Single light print theme by choice. */
 :root {
   color-scheme: light;
-  --paper: #fbfaf7;
-  --ink: #17202a;
-  --ink-2: #4a5563;
-  --rule: #d9d5cc;
-  --box: #ffffff;
-  --accent: #0b6bcb;      /* the voice path */
-  --human: #b4541a;       /* where a person decides */
-  --store: #2f6f4f;       /* where data lands */
-  --tint-accent: #e8f1fb;
-  --tint-human: #fbefe6;
-  --tint-store: #e9f3ee;
+  --paper: #f3f2ec;
+  --ink: #16211d;
+  --ink-2: #4b5651;
+  --rail: #1d3a31;       /* actor column + header */
+  --rail-ink: #e9efe9;
+  --rail-ink-2: #a9bab2;
+  --lane-a: #ffffff;
+  --lane-b: #f6f7f2;
+  --line: #d8d9d0;
+  --wire: #5d6661;
+  --c-trigger: #6f4bd8;
+  --c-input: #2f6fd0;
+  --c-context: #3c8b4a;
+  --c-proc: #b8860b;
+  --c-ai: #c4386e;
+  --c-output: #c7652a;
+  --c-human: #7a4f34;
+  --display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
   --sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
-  --mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+  --mono: "IBM Plex Mono", Menlo, monospace;
 }
-@page { size: A4 landscape; margin: 10mm; }
 html, body { background: var(--paper); color: var(--ink); }
-body { font-family: var(--sans); font-size: 12.5px; line-height: 1.45; margin: 0; padding-block: 18px; padding-inline: 22px; }
-.sheet { max-width: 1320px; margin: 0 auto; }
-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; border-bottom: 2px solid var(--ink); padding-bottom: 8px; }
-h1 { font-size: 24px; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
-.sub { color: var(--ink-2); margin: 2px 0 0; }
-.meta { font-family: var(--mono); font-size: 11px; color: var(--ink-2); text-align: right; }
-figure { margin: 12px 0 0; }
-.map-wrap { overflow-x: auto; }
-svg { display: block; width: 100%; height: auto; max-width: 100%; }
-figcaption { font-size: 11.5px; color: var(--ink-2); margin-top: 4px; }
-.legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 11.5px; color: var(--ink-2); margin-top: 6px; }
-.legend span { display: inline-flex; align-items: center; gap: 6px; }
-.sw { width: 14px; height: 10px; border-radius: 2px; display: inline-block; border: 1.5px solid; }
-.page2 { break-before: page; padding-top: 8px; }
-h2 { font-size: 15px; margin: 14px 0 6px; letter-spacing: 0.01em; }
-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
-th { text-align: left; font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-2); border-bottom: 1.5px solid var(--ink); padding: 5px 6px; }
-td { border-bottom: 1px solid var(--rule); padding: 5px 6px; vertical-align: top; }
-td:first-child { font-family: var(--mono); font-size: 11px; white-space: nowrap; color: var(--ink-2); }
-td b { font-weight: 600; }
-.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
-.cols > div { min-width: 0; }
-.note { border-left: 3px solid var(--human); padding: 4px 10px; background: var(--tint-human); }
-.note p { margin: 3px 0; }
-ul.tight { margin: 4px 0; padding-left: 16px; }
-ul.tight li { margin: 2px 0; }
-code { font-family: var(--mono); font-size: 0.92em; }
+body { margin: 0; padding-block: 28px 36px; padding-inline: 32px; font-family: var(--sans); font-size: 14px; line-height: 1.45; }
+.sheet { width: 1760px; max-width: 100%; margin: 0 auto; }
+.kicker { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+h1 { font-family: var(--display); font-weight: 800; font-size: 48px; letter-spacing: -0.03em; line-height: 1.05; margin: 8px 0 12px; text-wrap: balance; }
+.lede { max-width: 900px; font-size: 16.5px; color: var(--ink-2); margin: 0 0 14px; }
+.legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 14px; color: var(--ink-2); margin-bottom: 18px; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend i { width: 13px; height: 13px; border: 2px solid; border-radius: 3px; display: inline-block; }
+
+.matrix-wrap { overflow-x: auto; }
+.matrix { position: relative; display: grid; grid-template-columns: 210px repeat(6, minmax(0, 1fr)); border-radius: 18px; overflow: hidden; background: var(--lane-a); box-shadow: 0 1px 0 var(--line), 0 0 0 1px var(--line); min-width: 1400px; }
+.hd { background: var(--rail); color: var(--rail-ink); padding: 16px 12px; text-align: center; border-left: 1px solid rgba(255,255,255,.08); }
+.hd b { display: block; font-family: var(--display); font-size: 18px; font-weight: 700; }
+.hd small { font-family: var(--mono); font-size: 11.5px; color: var(--rail-ink-2); letter-spacing: .04em; }
+.hd.actor-h { text-align: left; border-left: 0; display: flex; align-items: center; font-family: var(--display); font-weight: 700; font-size: 16px; }
+.actor { background: var(--rail); color: var(--rail-ink); padding: 16px; display: flex; flex-direction: column; justify-content: center; border-top: 1px solid rgba(255,255,255,.08); }
+.actor b { font-family: var(--display); font-size: 17px; font-weight: 700; }
+.actor small { font-family: var(--mono); font-size: 11.5px; color: var(--rail-ink-2); margin-top: 3px; line-height: 1.4; }
+.cell { padding: 16px 22px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; min-height: 92px; }
+.lane-b { background: var(--lane-b); }
+.card { position: relative; z-index: 2; width: 100%; max-width: 232px; background: #fff; border: 1.6px solid; border-radius: 10px; padding: 10px 12px 9px; font-size: 13.5px; line-height: 1.42; }
+.card .n { display: inline-block; font-family: var(--mono); font-weight: 500; font-size: 12px; color: #fff; padding: 1px 6px; border-radius: 5px; margin-right: 5px; vertical-align: 1px; }
+.card .meta { display: block; margin-top: 7px; font-family: var(--mono); font-size: 11px; color: var(--ink-2); line-height: 1.45; }
+.card b { font-weight: 700; }
+.k-trigger { border-color: var(--c-trigger); } .k-trigger .n { background: var(--c-trigger); }
+.k-input { border-color: var(--c-input); } .k-input .n { background: var(--c-input); }
+.k-context { border-color: var(--c-context); } .k-context .n { background: var(--c-context); }
+.k-proc { border-color: var(--c-proc); } .k-proc .n { background: var(--c-proc); }
+.k-ai { border-color: var(--c-ai); } .k-ai .n { background: var(--c-ai); }
+.k-output { border-color: var(--c-output); } .k-output .n { background: var(--c-output); }
+.k-human { border-color: var(--c-human); } .k-human .n { background: var(--c-human); }
+svg.wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; overflow: visible; }
+
+.foot { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+.foot > div { min-width: 0; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; }
+.foot h3 { font-family: var(--display); font-size: 16px; margin: 0 0 6px; }
+.foot p { margin: 4px 0; color: var(--ink-2); }
+.foot .cut { border-color: var(--c-human); background: #fbf3ec; }
+@media (max-width: 900px) { .foot { grid-template-columns: 1fr; } h1 { font-size: 34px; } }
 </style>
 
 <div class="sheet">
-  <header>
+  <div class="kicker">MESA Case 03 · Aangan Studio · as deployed on 10 Oct 2026 · Samyak Pandey</div>
+  <h1>Components map: one call, ring to handoff</h1>
+  <p class="lede">Rows are the actors, columns are the stages. Follow the numbers. Step 2a is a phone call through Vaani; 2b is the same conversation from the website’s “Talk to Meera” button. Both paths reach the same agent at step 4 and run identical rules from step 7.</p>
+  <div class="legend">
+    <span><i style="border-color:var(--c-trigger)"></i>Trigger</span>
+    <span><i style="border-color:var(--c-input)"></i>Input</span>
+    <span><i style="border-color:var(--c-context)"></i>Context</span>
+    <span><i style="border-color:var(--c-proc)"></i>Processing (code)</span>
+    <span><i style="border-color:var(--c-ai)"></i>AI</span>
+    <span><i style="border-color:var(--c-output)"></i>Output</span>
+    <span><i style="border-color:var(--c-human)"></i>Human</span>
+  </div>
+
+  <div class="matrix-wrap">
+  <div class="matrix" id="matrix">
+    <div class="hd actor-h">Actor</div>
+    <div class="hd"><b>Trigger</b><small>what starts it</small></div>
+    <div class="hd"><b>Input</b><small>what comes in</small></div>
+    <div class="hd"><b>Context</b><small>what it knows</small></div>
+    <div class="hd"><b>Processing</b><small>rules in code</small></div>
+    <div class="hd"><b>AI</b><small>where a model works</small></div>
+    <div class="hd"><b>Output</b><small>what leaves</small></div>
+  </div>
+  </div>
+
+  <div class="foot">
     <div>
-      <h1>Aangan Studio · Phone Enquiry Agent: Components Map</h1>
-      <p class="sub">MESA Case 03 · Trigger → Input → Context → Processing → AI → Output, with every tool, data store and human hand-off</p>
+      <h3>Why email, not Telegram</h3>
+      <p>Designers already work from email; there’s no bot or group to set up. Each lead email carries signed one-tap <b>Claim / Called / Not a fit</b> links that update the CRM and the HubSpot deal.</p>
     </div>
-    <div class="meta">Samyak Pandey · Founder’s Office<br>Live: aangan-enquiry-agent-green.vercel.app<br>October 2026</div>
-  </header>
-
-  <figure>
-    <div class="map-wrap">
-    <svg viewBox="0 0 1374 590" role="img" aria-label="A phone or web call flows through six stages in Vaani AI and the Next.js webhook, then fans out to Supabase, HubSpot, Resend email, Calendly and the Aangan CRM; designers, the caller and Nikhil act on those outputs, and designer actions feed back to HubSpot deal stages.">
-      <defs>
-        <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#17202a"/></marker>
-        <marker id="arw-h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b4541a"/></marker>
-        <marker id="arw-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0b6bcb"/></marker>
-      </defs>
-
-      <!-- Row labels -->
-      <text x="0" y="22" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" fill="#4a5563" letter-spacing="1">THE CALL · VAANI AI + WEBHOOK</text>
-      <text x="0" y="268" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" fill="#4a5563" letter-spacing="1">WHERE IT LANDS</text>
-      <text x="0" y="458" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" fill="#4a5563" letter-spacing="1">WHO ACTS ON IT</text>
-
-      <!-- ── Row 1: the six stages ── -->
-      <g font-family="IBM Plex Sans, Arial, sans-serif" fill="#17202a">
-        <!-- 1 Trigger -->
-        <rect x="25" y="34" width="200" height="150" rx="8" fill="#e8f1fb" stroke="#0b6bcb" stroke-width="1.5"/>
-        <text x="39" y="56" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" fill="#0b6bcb">1 · TRIGGER</text>
-        <text x="39" y="78" font-size="15" font-weight="700">Inbound call</text>
-        <text x="39" y="98" font-size="12" fill="#4a5563">After 7pm / weekends, or</text>
-        <text x="39" y="114" font-size="12" fill="#4a5563">unanswered in 4 rings.</text>
-        <text x="39" y="130" font-size="12" fill="#4a5563">Or “Talk to Meera” web call</text>
-        <text x="39" y="146" font-size="12" fill="#4a5563">on the homepage.</text>
-        <text x="39" y="172" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" fill="#0b6bcb">Phone no. · WebRTC</text>
-
-        <!-- 2 Input -->
-        <rect x="255" y="34" width="200" height="150" rx="8" fill="#ffffff" stroke="#17202a" stroke-width="1.2"/>
-        <text x="269" y="56" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" fill="#4a5563">2 · INPUT</text>
-        <text x="269" y="78" font-size="15" font-weight="700">Voice + number</text>
-        <text x="269" y="98" font-size="12" fill="#4a5563">call_started webhook</text>
-        <text x="269" y="114" font-size="12" fill="#4a5563">carries the caller’s number;</text>
-        <text x="269" y="130" font-size="12" fill="#4a5563">redials and returning</text>
-        <text x="269" y="146" font-size="12" fill="#4a5563">callers matched by phone.</text>
-        <text x="269" y="172" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" fill="#4a5563">Vaani AI · Supabase</text>
-
-        <!-- 3 Context -->
-        <rect x="485" y="34" width="200" height="150" rx="8" fill="#ffffff" stroke="#17202a" stroke-width="1.2"/>
-        <text x="499" y="56" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" fill="#4a5563">3 · CONTEXT</text>
-        <text x="499" y="78" font-size="15" font-weight="700">What Aangan does</text>
-        <text x="499" y="98" font-size="12" fill="#4a5563">services.md, Nikhil’s five</text>
-        <text x="499" y="114" font-size="12" fill="#4a5563">checks, 13 FAQs, guardrails.</text>
-        <text x="499" y="130" font-size="12" font-weight="600" fill="#b4541a">pricing.md never loaded</text>
-        <text x="499" y="146" font-size="12" fill="#b4541a">(upload refuses any ₹ figure)</text>
-        <text x="499" y="172" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" fill="#4a5563">Vaani agent config</text>
-
-        <!-- 4 Processing -->
-        <rect x="715" y="34" width="200" height="150" rx="8" fill="#ffffff" stroke="#17202a" stroke-width="1.2"/>
-        <text x="729" y="56" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" fill="#4a5563">4 · PROCESSING</text>
-        <text x="729" y="78" font-size="15" font-weight="700">Meera asks</text>
-        <text x="729" y="98" font-size="12" fill="#4a5563">Scope, area, size, timeline,</text>
-        <text x="729" y="114" font-size="12" fill="#4a5563">decision-maker, source.</text>
-        <text x="729" y="130" font-size="12" fill="#4a5563">Never asks budget. 20 fields</text>
-        <text x="729" y="146" font-size="12" fill="#4a5563">extracted after the call.</text>
-        <text x="729" y="172" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" fill="#4a5563">Vaani AI (voice agent)</text>
-
-        <!-- 5 AI -->
-        <rect x="945" y="34" width="200" height="150" rx="8" fill="#ffffff" stroke="#17202a" stroke-width="1.2"/>
-        <text x="959" y="56" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" fill="#4a5563">5 · AI</text>
-        <text x="959" y="78" font-size="15" font-weight="700">Route, then re-check</text>
-        <text x="959" y="98" font-size="12" fill="#4a5563">Meera tags a route; the server</text>
-        <text x="959" y="114" font-size="12" fill="#4a5563">re-applies the five checks.</text>
-        <text x="959" y="130" font-size="12" fill="#4a5563">Disagreement → human review.</text>
-        <text x="959" y="146" font-size="12" fill="#4a5563">30/30 Sept enquiries correct.</text>
-        <text x="959" y="172" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" fill="#4a5563">Vaani + routing.ts</text>
-
-        <!-- 6 Output -->
-        <rect x="1175" y="34" width="199" height="150" rx="8" fill="#e8f1fb" stroke="#0b6bcb" stroke-width="1.5"/>
-        <text x="1189" y="56" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" fill="#0b6bcb">6 · OUTPUT</text>
-        <text x="1189" y="78" font-size="15" font-weight="700">Webhook fans out</text>
-        <text x="1189" y="98" font-size="12" fill="#4a5563">call_postprocessing →</text>
-        <text x="1189" y="114" font-size="12" fill="#4a5563">Next.js on Vercel. Each</text>
-        <text x="1189" y="130" font-size="12" fill="#4a5563">output is isolated: one</text>
-        <text x="1189" y="146" font-size="12" fill="#4a5563">failure never blocks others.</text>
-        <text x="1189" y="172" font-family="IBM Plex Mono, Menlo, monospace" font-size="11" fill="#0b6bcb">Vercel · GitHub</text>
-      </g>
-
-      <!-- stage arrows -->
-      <g stroke="#17202a" stroke-width="1.4" fill="none">
-        <line x1="225" y1="109" x2="252" y2="109" marker-end="url(#arw)"/>
-        <line x1="455" y1="109" x2="482" y2="109" marker-end="url(#arw)"/>
-        <line x1="685" y1="109" x2="712" y2="109" marker-end="url(#arw)"/>
-        <line x1="915" y1="109" x2="942" y2="109" marker-end="url(#arw)"/>
-        <line x1="1145" y1="109" x2="1172" y2="109" marker-end="url(#arw)"/>
-      </g>
-
-      <!-- fan-out bus from Output -->
-      <g stroke="#0b6bcb" stroke-width="1.6" fill="none">
-        <line x1="1274" y1="184" x2="1274" y2="226"/>
-        <line x1="145" y1="226" x2="1274" y2="226"/>
-        <line x1="145" y1="226" x2="145" y2="277" marker-end="url(#arw-a)"/>
-        <line x1="416" y1="226" x2="416" y2="277" marker-end="url(#arw-a)"/>
-        <line x1="687" y1="226" x2="687" y2="277" marker-end="url(#arw-a)"/>
-        <line x1="958" y1="226" x2="958" y2="277" marker-end="url(#arw-a)"/>
-        <line x1="1229" y1="226" x2="1229" y2="277" marker-end="url(#arw-a)"/>
-      </g>
-      <g font-family="IBM Plex Mono, Menlo, monospace" font-size="10.5" fill="#0b6bcb">
-        <text x="151" y="252">writes call + lead</text>
-        <text x="422" y="252">upserts contact, deal</text>
-        <text x="693" y="252">sends by route</text>
-        <text x="964" y="252">qualified only</text>
-        <text x="1060" y="216" text-anchor="middle">every call</text>
-      </g>
-
-      <!-- ── Row 2: where it lands ── -->
-      <g font-family="IBM Plex Sans, Arial, sans-serif" fill="#17202a">
-        <rect x="25" y="280" width="240" height="118" rx="8" fill="#e9f3ee" stroke="#2f6f4f" stroke-width="1.4"/>
-        <text x="39" y="302" font-size="14" font-weight="700">Supabase</text>
-        <text x="39" y="320" font-size="12" fill="#4a5563">Postgres: calls, leads, emails,</text>
-        <text x="39" y="336" font-size="12" fill="#4a5563">designer actions, event log.</text>
-        <text x="39" y="352" font-size="12" fill="#4a5563">Idempotent: Vaani retries</text>
-        <text x="39" y="368" font-size="12" fill="#4a5563">never double-send.</text>
-        <text x="39" y="388" font-family="IBM Plex Mono, Menlo, monospace" font-size="10.5" fill="#2f6f4f">system of record for calls</text>
-
-        <rect x="296" y="280" width="240" height="118" rx="8" fill="#e9f3ee" stroke="#2f6f4f" stroke-width="1.4"/>
-        <text x="310" y="302" font-size="14" font-weight="700">HubSpot</text>
-        <text x="310" y="320" font-size="12" fill="#4a5563">Contact per caller, deal per</text>
-        <text x="310" y="336" font-size="12" fill="#4a5563">qualified lead, call log with</text>
-        <text x="310" y="352" font-size="12" fill="#4a5563">transcript, tasks, notes.</text>
-        <text x="310" y="368" font-size="12" fill="#4a5563">Pipeline “Aangan Enquiries”.</text>
-        <text x="310" y="388" font-family="IBM Plex Mono, Menlo, monospace" font-size="10.5" fill="#2f6f4f">sales CRM of record</text>
-
-        <rect x="567" y="280" width="240" height="118" rx="8" fill="#ffffff" stroke="#17202a" stroke-width="1.2"/>
-        <text x="581" y="302" font-size="14" font-weight="700">Resend email</text>
-        <text x="581" y="320" font-size="12" fill="#4a5563">Designer handoff with signed</text>
-        <text x="581" y="336" font-size="12" fill="#4a5563">Claim / Called / Not-a-fit links.</text>
-        <text x="581" y="352" font-size="12" fill="#4a5563">Complaint, overdue and 9pm</text>
-        <text x="581" y="368" font-size="12" fill="#4a5563">digest emails to Nikhil.</text>
-        <text x="581" y="388" font-family="IBM Plex Mono, Menlo, monospace" font-size="10.5" fill="#4a5563">handoff channel (not Telegram)</text>
-
-        <rect x="838" y="280" width="240" height="118" rx="8" fill="#ffffff" stroke="#17202a" stroke-width="1.2"/>
-        <text x="852" y="302" font-size="14" font-weight="700">Calendly booking</text>
-        <text x="852" y="320" font-size="12" fill="#4a5563">Booking link emailed to the</text>
-        <text x="852" y="336" font-size="12" fill="#4a5563">caller, tagged with their lead;</text>
-        <text x="852" y="352" font-size="12" fill="#4a5563">15-min sync marks the lead</text>
-        <text x="852" y="368" font-size="12" fill="#4a5563">booked + HubSpot meeting.</text>
-        <text x="852" y="388" font-family="IBM Plex Mono, Menlo, monospace" font-size="10.5" fill="#4a5563">60-min consultation · invite</text>
-
-        <rect x="1109" y="280" width="265" height="118" rx="8" fill="#ffffff" stroke="#17202a" stroke-width="1.2"/>
-        <text x="1123" y="302" font-size="14" font-weight="700">Aangan CRM dashboard</text>
-        <text x="1123" y="320" font-size="12" fill="#4a5563">Calls, transcripts, recordings,</text>
-        <text x="1123" y="336" font-size="12" fill="#4a5563">lead pipeline, email log,</text>
-        <text x="1123" y="352" font-size="12" fill="#4a5563">designer response times,</text>
-        <text x="1123" y="368" font-size="12" fill="#4a5563">agent cost per qualified lead.</text>
-        <text x="1123" y="388" font-family="IBM Plex Mono, Menlo, monospace" font-size="10.5" fill="#4a5563">Next.js · reads Supabase</text>
-      </g>
-
-      <!-- Row 2 → Row 3 -->
-      <g stroke="#b4541a" stroke-width="1.5" fill="none">
-        <line x1="687" y1="398" x2="687" y2="467" marker-end="url(#arw-h)"/>
-        <line x1="958" y1="398" x2="958" y2="467" marker-end="url(#arw-h)"/>
-        <line x1="1241" y1="398" x2="1241" y2="467" marker-end="url(#arw-h)"/>
-        <!-- designer feedback to HubSpot -->
-        <path d="M567 512 H416 V401" stroke-dasharray="5 4" marker-end="url(#arw-h)"/>
-      </g>
-      <g font-family="IBM Plex Mono, Menlo, monospace" font-size="10.5" fill="#b4541a">
-        <text x="693" y="438">lead + one-tap Claim</text>
-        <text x="964" y="438">booking link → invite</text>
-        <text x="1247" y="438">overview · review</text>
-        <text x="424" y="430">Claim / Booked / Won</text>
-        <text x="424" y="444">→ deal stage + note</text>
-      </g>
-
-      <!-- ── Row 3: who acts ── -->
-      <g font-family="IBM Plex Sans, Arial, sans-serif" fill="#17202a">
-        <rect x="567" y="470" width="240" height="96" rx="8" fill="#fbefe6" stroke="#b4541a" stroke-width="1.5"/>
-        <text x="581" y="492" font-size="14" font-weight="700">Designer</text>
-        <text x="581" y="510" font-size="12" fill="#4a5563">Claims the lead, calls within</text>
-        <text x="581" y="526" font-size="12" fill="#4a5563">1 hour (11am if after hours),</text>
-        <text x="581" y="542" font-size="12" font-weight="600" fill="#b4541a">prices at the consultation.</text>
-        <text x="581" y="558" font-size="11" fill="#4a5563">Owns the relationship.</text>
-
-        <rect x="838" y="470" width="240" height="96" rx="8" fill="#fbefe6" stroke="#b4541a" stroke-width="1.5"/>
-        <text x="852" y="492" font-size="14" font-weight="700">Caller</text>
-        <text x="852" y="510" font-size="12" fill="#4a5563">Picks a free consultation</text>
-        <text x="852" y="526" font-size="12" fill="#4a5563">slot from the link and gets</text>
-        <text x="852" y="542" font-size="12" fill="#4a5563">a call from their designer.</text>
-
-        <rect x="1109" y="470" width="265" height="96" rx="8" fill="#fbefe6" stroke="#b4541a" stroke-width="1.5"/>
-        <text x="1123" y="492" font-size="14" font-weight="700">Nikhil (owner of the rules)</text>
-        <text x="1123" y="510" font-size="12" fill="#4a5563">Complaints at once, overdue</text>
-        <text x="1123" y="526" font-size="12" fill="#4a5563">callbacks, 9pm digest; reviews</text>
-        <text x="1123" y="542" font-size="12" fill="#4a5563">every declined or disputed call.</text>
-        <text x="1123" y="558" font-size="11" fill="#4a5563">Owns prices and the five checks.</text>
-
-        <rect x="25" y="470" width="511" height="96" rx="8" fill="none" stroke="#d9d5cc" stroke-width="1.2" stroke-dasharray="4 4"/>
-        <text x="39" y="490" font-size="13" font-weight="700">Scheduled jobs (no person needed)</text>
-        <text x="39" y="508" font-size="12" fill="#4a5563">Every 5 min: retry calls whose details weren’t ready.</text>
-        <text x="39" y="524" font-size="12" fill="#4a5563">Every 15 min: email Nikhil about callers past their promise.</text>
-        <text x="39" y="540" font-size="12" fill="#4a5563">Every 15 min: Calendly bookings → lead + HubSpot.</text>
-        <text x="39" y="556" font-size="12" fill="#4a5563">Daily 9pm IST: numbers + declined calls digest.</text>
-      </g>
-    </svg>
+    <div>
+      <h3>Two records, one truth each</h3>
+      <p><b>Supabase</b> holds every call, event, email and cost, and powers the dashboard. <b>HubSpot</b> holds people and deals in the “Aangan Enquiries” pipeline. Each output is isolated, so one failing never blocks the rest.</p>
     </div>
-    <figcaption>One call, end to end: Vaani AI answers and extracts; the Next.js webhook re-checks the route and fans out to five places; people act only at the hand-offs (orange). Dashed arrow: designer actions flow back into HubSpot deal stages.</figcaption>
-    <div class="legend">
-      <span><i class="sw" style="border-color:#0b6bcb;background:#e8f1fb"></i>Entry and exit of the voice path</span>
-      <span><i class="sw" style="border-color:#2f6f4f;background:#e9f3ee"></i>Data of record</span>
-      <span><i class="sw" style="border-color:#b4541a;background:#fbefe6"></i>Human boundary</span>
+    <div class="cut">
+      <h3>The Cut: no price on the call</h3>
+      <p>Nikhil asked for per-sq-ft quotes; his own pricing.md and Check 06 say no number is ever quoted. The price list never enters the agent, the upload refuses any ₹ figure, and the designer prices at the consultation.</p>
     </div>
-  </figure>
-
-  <section class="page2">
-    <h2>Components</h2>
-    <div class="map-wrap">
-    <table>
-      <thead><tr><th>Stage</th><th>Component</th><th>What it does</th><th>If it fails</th></tr></thead>
-      <tbody>
-        <tr><td>Trigger</td><td><b>Vaani AI phone number</b> · homepage web call</td><td>Picks up after hours and on overflow; web visitors talk to Meera in the browser (capped 4 min, 5/visitor/day, 60/day).</td><td>Caller hears the studio line as before; nothing worse than today.</td></tr>
-        <tr><td>Input</td><td><b>Vaani webhooks</b> → <code>/api/vaani/webhook</code></td><td><code>call_started</code> gives the number; <code>call_ended</code> / <code>call_postprocessing</code> give summary, transcript, fields. URL-token auth.</td><td>Every event stored once; Vaani retries are ignored; unprocessed calls retried every 5 min.</td></tr>
-        <tr><td>Context</td><td><b>Agent config</b> (script, FAQ, guardrails)</td><td>services.md, five checks, 13 FAQs, pricing deflection. Built from the repo by <code>npm run vaani:agent</code>.</td><td>Upload refuses to run if any ₹ figure appears in the prompt.</td></tr>
-        <tr><td>Processing</td><td><b>Meera</b> (Vaani voice agent)</td><td>Natural conversation in English/Hindi/Marathi; extracts 20 fields and a route tag.</td><td>Dropped line → “dropped call” lead + callback task.</td></tr>
-        <tr><td>AI</td><td><b>Routing rules</b> (<code>lib/routing.ts</code>)</td><td>Second opinion on every call: area, execution, timeline, volunteered budget vs internal floor, decision-maker.</td><td>Agent and rules disagree → flagged for Nikhil, never silently routed.</td></tr>
-        <tr><td>Output</td><td><b>Supabase</b></td><td>Calls, leads, emails, designer actions, event log; powers the dashboard.</td><td>Webhook returns error; Vaani retries for ~4 h.</td></tr>
-        <tr><td>Output</td><td><b>HubSpot</b></td><td>Contact, deal in “Aangan Enquiries”, call log with transcript, tasks, notes; stages move with designer actions.</td><td>Logged on the call; email and CRM still go out.</td></tr>
-        <tr><td>Output</td><td><b>Resend email</b></td><td>Designer handoff with signed one-tap actions; complaint, overdue and digest emails; caller booking link.</td><td>Failure logged in the Emails tab; lead still visible in CRM and HubSpot.</td></tr>
-        <tr><td>Output</td><td><b>Calendly</b></td><td>“Aangan design consultation” (60 min). Qualified callers get a booking link tagged with their lead; a 15-minute sync marks the lead booked, logs a HubSpot meeting and emails the designer.</td><td>Caller doesn’t book → designer fixes the time on the callback.</td></tr>
-        <tr><td>Output</td><td><b>Aangan CRM</b> (Next.js on Vercel)</td><td>Overview, calls, lead pipeline and timeline, email log, designers, settings, CSV export.</td><td>Read-only view; data stays in Supabase and HubSpot.</td></tr>
-      </tbody>
-    </table>
-    </div>
-
-    <div class="cols" style="margin-top: 10px;">
-      <div>
-        <h2>Why these choices</h2>
-        <ul class="tight">
-          <li><b>Email over Telegram.</b> Designers already live in email, it needs no bot or group, the invite and the lead arrive together, and signed links give one-tap Claim without an app.</li>
-          <li><b>HubSpot as the sales record, Supabase as the call record.</b> HubSpot holds people and deals; Supabase holds every call, event and cost so the dashboard never depends on CRM limits.</li>
-          <li><b>Rules re-check the AI.</b> A wrong decline is a lost ₹8–14 lakh project; a second opinion costs nothing.</li>
-        </ul>
-      </div>
-      <div class="note">
-        <h2 style="margin-top:4px">The Cut: no price on the call</h2>
-        <p>Nikhil asked for per-sq-ft quotes. His own pricing.md says no number is ever quoted, and Check 06 (failure risk) agrees: a number in the studio’s voice becomes a commitment.</p>
-        <p>So the price list never enters the agent, the budget judgement runs on the server, and pricing stays with the designer at the consultation.</p>
-      </div>
-    </div>
-  </section>
+  </div>
 </div>
+
+<script>
+// Rows = actors, cols = stages (1..6). Cards are placed into their cell; connectors are drawn after layout.
+const ACTORS = [
+  ['caller', 'Caller', 'prospect, any hour'],
+  ['vaani', 'Vaani AI', 'phone voice agent · “Meera”'],
+  ['web', 'Website', 'homepage · Talk to Meera'],
+  ['brief', 'Meera’s brief', 'agent config ·<br>scripts/vaani-agent.ts'],
+  ['server', 'Our server', 'Next.js on Vercel'],
+  ['db', 'Supabase', 'Postgres · pg_cron'],
+  ['hubspot', 'HubSpot', 'CRM · Aangan Enquiries'],
+  ['cal', 'Calendly', 'consultation booking'],
+  ['email', 'Resend', 'email handoff'],
+  ['people', 'People', 'designers · Nikhil · desk'],
+];
+const CARDS = [
+  { id: 'c1', row: 'caller', col: 1, k: 'trigger', n: '1', html: '<b>Calls Aangan</b>, day or night: rings the Vaani line, or taps <b>Talk to Meera</b> on the website.', meta: 'after 7pm · weekends · 4 unanswered rings' },
+  { id: 'c2a', row: 'vaani', col: 2, k: 'input', n: '2a', html: 'Picks up in seconds; <b>speech-to-text</b> on the caller’s voice. <i>call_started</i> carries the number.', meta: 'agent “aangan-enquiries-meera”' },
+  { id: 'c2b', row: 'web', col: 2, k: 'input', n: '2b', html: '<b>Talk to Meera</b>: the server opens a Vaani voice room; the browser streams the mic.', meta: '/api/receptionist · 4 min cap · 5/visitor/day' },
+  { id: 'c3', row: 'brief', col: 3, k: 'context', n: '3', html: 'What Meera knows: services, Pune/PCMC areas, the <b>five checks</b>, 13 FAQs and the pricing deflection line. <b>No price figures.</b>', meta: 'services.md · qualified.md · pricing-policy.md (no ₹)' },
+  { id: 'c4', row: 'vaani', col: 5, k: 'ai', n: '4', html: '<b>Meera talks</b>: one question at a time; price asked → deflection; fits → designer call + booking link; doesn’t fit → polite close.', meta: 'Vaani LLM · English · Hindi · Marathi' },
+  { id: 'c4x', row: 'vaani', col: 5, k: 'ai', n: '5', html: '<b>Extracts 20 fields</b> + a route tag: scope, area, size, timeline, decision-maker, volunteered budget, email. <b>Never prices.</b>', meta: 'entities · dispositions' },
+  { id: 'c5', row: 'vaani', col: 6, k: 'output', n: '6', html: 'Call ends → <b>“Call Post-Processing”</b> webhook POSTs summary, transcript and fields.', meta: 'Vaani Developers → Webhooks' },
+  { id: 'c6', row: 'server', col: 4, k: 'proc', n: '7', html: 'Checks the webhook token, <b>stores each event once</b>, joins the number from step 2a, links caller history.', meta: '/api/vaani/webhook · lib/processCall.ts' },
+  { id: 'c6s', row: 'db', col: 3, k: 'context', n: '7', html: '<b>Caller history</b>: earlier calls from the same number (returning caller, dropped and redialled).', meta: 'leads · calls tables' },
+  { id: 'c7', row: 'server', col: 4, k: 'proc', n: '8', html: '<b>Five checks in code</b> → Qualified · Nurture · Declined · Escalate · Dropped. Disagrees with Meera → review.', meta: 'lib/routing.ts · 32 tests · 30/30 Sept calls' },
+  { id: 'c8', row: 'db', col: 6, k: 'output', n: '9', html: '<b>Saves</b> the call, lead, route, flags and cost; feeds the CRM dashboard.', meta: 'calls · leads · emails · lead_actions' },
+  { id: 'c8h', row: 'hubspot', col: 6, k: 'output', n: '9', html: '<b>Contact + deal</b> in “Aangan Enquiries”, call log with transcript, tasks for call-backs.', meta: 'HubSpot CRM API' },
+  { id: 'c8e', row: 'email', col: 6, k: 'output', n: '9', html: '<b>Emails by outcome</b>: New lead → designers (one-tap Claim); URGENT → Nikhil; Call back → front desk.', meta: 'Resend · signed links' },
+  { id: 'c8c', row: 'cal', col: 6, k: 'output', n: '9', html: '<b>One-time booking link</b>, pre-filled and tagged with the lead, emailed to the caller.', meta: 'Aangan design consultation · 60 min' },
+  { id: 'c10', row: 'db', col: 4, k: 'proc', n: '11', html: '<b>Every 15 min</b>: new Calendly bookings → lead Booked + HubSpot meeting; overdue callers → Nikhil.', meta: 'pg_cron → /api/cron/*' },
+  { id: 'c9', row: 'people', col: 6, k: 'human', n: '10', html: 'Designer taps <b>Claim</b>, calls back within the hour and <b>gives the price at the consultation</b>. Nikhil reads the CRM and the 9pm digest.', meta: '' },
+];
+// [from, to, route, offset]. Routes keep every wire in empty lanes instead of behind cards.
+const EDGES = [
+  ['c1', 'c2a'], ['c1', 'c2b'],
+  ['c2a', 'c4', 'intoLeft'], ['c2b', 'c4', 'intoLeft'], ['c3', 'c4', 'intoLeft'],
+  ['c4x', 'c5'], ['c5', 'c6'], ['c6s', 'c6', 'upLeft'], ['c6', 'c7'],
+  ['c7', 'c8', 'trunk'], ['c7', 'c8h', 'trunk'], ['c7', 'c8c', 'trunk'], ['c7', 'c8e', 'trunk'],
+  ['c8e', 'c9'], ['c8c', 'c10', 'leftUp', 40], ['c10', 'c8h', 'downRight', -40],
+];
+
+const m = document.getElementById('matrix');
+ACTORS.forEach(([key, name, sub], r) => {
+  const a = document.createElement('div');
+  a.className = 'actor';
+  a.innerHTML = `<b>${name}</b><small>${sub}</small>`;
+  m.appendChild(a);
+  for (let c = 1; c <= 6; c++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell' + (r % 2 ? ' lane-b' : '');
+    cell.dataset.key = `${key}-${c}`;
+    m.appendChild(cell);
+  }
+});
+for (const c of CARDS) {
+  const el = document.createElement('div');
+  el.className = `card k-${c.k}`;
+  el.id = c.id;
+  el.innerHTML = `<span class="n">${c.n}</span>${c.html}${c.meta ? `<span class="meta">${c.meta}</span>` : ''}`;
+  m.querySelector(`[data-key="${c.row}-${c.col}"]`).appendChild(el);
+}
+
+const NS = 'http://www.w3.org/2000/svg';
+function draw() {
+  m.querySelector('svg.wires')?.remove();
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('class', 'wires');
+  svg.innerHTML = '<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5d6661"/></marker></defs>';
+  const box = m.getBoundingClientRect();
+  const R = (id) => { const r = document.getElementById(id).getBoundingClientRect(); return { l: r.left - box.left, r: r.right - box.left, t: r.top - box.top, b: r.bottom - box.top, cx: (r.left + r.right) / 2 - box.left, cy: (r.top + r.bottom) / 2 - box.top }; };
+  for (const [a, b, route, off = 0] of EDGES) {
+    const s = R(a), t = R(b);
+    let d;
+    if (route === 'intoLeft' || route === 'trunk') {
+      // out of the source's right side, along a vertical trunk just left of the target, into its left side
+      const x = t.l - 18;
+      d = `M${s.r},${s.cy} H${x} V${t.cy} H${t.l - 2}`;
+    } else if (route === 'upLeft') {
+      d = `M${s.cx},${s.t} V${t.cy} H${t.l - 2}`;
+    } else if (route === 'leftUp') {
+      d = `M${s.l},${s.cy} H${t.cx + off} V${t.b + 2}`;
+    } else if (route === 'downRight') {
+      d = `M${t.l > s.r ? s.cx + off : s.cx},${s.b} V${t.cy} H${t.l - 2}`;
+    } else if (Math.abs(s.cx - t.cx) < 4) {
+      d = t.t > s.b ? `M${s.cx},${s.b} V${t.t - 2}` : `M${s.cx},${s.t} V${t.b + 2}`;
+    } else if (t.t > s.b + 8) {
+      // target below: down, across just above the target, down
+      const y = t.t - 18;
+      d = `M${s.cx},${s.b} V${y} H${t.cx} V${t.t - 2}`;
+    } else if (t.b < s.t - 8) {
+      const y = t.b + 18;
+      d = `M${s.cx},${s.t} V${y} H${t.cx} V${t.b + 2}`;
+    } else {
+      const right = t.l > s.r;
+      const x0 = right ? s.r : s.l, x1 = right ? t.l - 2 : t.r + 2;
+      const xm = (x0 + x1) / 2;
+      d = `M${x0},${s.cy} H${xm} V${t.cy} H${x1}`;
+    }
+    const p = document.createElementNS(NS, 'path');
+    p.setAttribute('d', d);
+    p.setAttribute('fill', 'none');
+    p.setAttribute('stroke', '#5d6661');
+    p.setAttribute('stroke-width', '1.6');
+    p.setAttribute('stroke-dasharray', '6 5');
+    p.setAttribute('marker-end', 'url(#ah)');
+    svg.appendChild(p);
+  }
+  m.appendChild(svg);
+}
+const ready = document.fonts ? document.fonts.ready : Promise.resolve();
+ready.then(() => requestAnimationFrame(draw));
+window.addEventListener('resize', () => requestAnimationFrame(draw));
+</script>
