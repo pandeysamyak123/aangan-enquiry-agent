@@ -29,7 +29,7 @@ async function findLead(c: { leadId?: string; phone?: string; email?: string }) 
   return null;
 }
 
-export async function applyBooking(trigger: string, b: CalBooking, c: { name: string; email: string; phone?: string; leadId?: string }) {
+export async function applyBooking(trigger: string, b: Pick<CalBooking, 'uid' | 'title' | 'startTime' | 'endTime'>, c: { name: string; email: string; phone?: string; leadId?: string }, source = 'Cal.com') {
   const lead = await findLead(c);
   if (!lead) return `unmatched: ${c.name || c.email || c.phone || b.uid}`;
   const start = new Date(b.startTime);
@@ -38,15 +38,15 @@ export async function applyBooking(trigger: string, b: CalBooking, c: { name: st
 
   await db().from('leads').update(cancelled
     ? { status: lead.called_at ? 'called' : lead.claimed_at ? 'claimed' : 'new', consultation_at: null, updated_at: now }
-    : { status: ['won', 'consulted'].includes(lead.status) ? lead.status : 'booked', booked_at: lead.booked_at ?? now, consultation_at: start.toISOString(), calendly_event_uri: `calcom:${b.uid}`, updated_at: now },
+    : { status: ['won', 'consulted'].includes(lead.status) ? lead.status : 'booked', booked_at: lead.booked_at ?? now, consultation_at: start.toISOString(), calendly_event_uri: `${source.toLowerCase()}:${b.uid}`, updated_at: now },
   ).eq('id', lead.id);
-  await db().from('lead_actions').insert({ lead_id: lead.id, actor: 'Cal.com', action: cancelled ? 'booking_cancelled' : trigger === 'BOOKING_RESCHEDULED' ? 'booking_rescheduled' : 'booked', detail: { start: b.startTime, uid: b.uid } });
+  await db().from('lead_actions').insert({ lead_id: lead.id, actor: source, action: cancelled ? 'booking_cancelled' : trigger === 'BOOKING_RESCHEDULED' ? 'booking_rescheduled' : 'booked', detail: { start: b.startTime, uid: b.uid } });
 
   if (hubspot.hubspotEnabled() && (lead.hubspot_contact_id || lead.hubspot_deal_id)) {
     try {
-      if (!cancelled && lead.hubspot_contact_id) await hubspot.logMeeting({ contactId: lead.hubspot_contact_id, dealId: lead.hubspot_deal_id ?? undefined, title: b.title ?? 'Aangan design consultation', start, end: new Date(b.endTime), body: `Booked via Cal.com${c.email ? ` by ${c.email}` : ''}` });
+      if (!cancelled && lead.hubspot_contact_id) await hubspot.logMeeting({ contactId: lead.hubspot_contact_id, dealId: lead.hubspot_deal_id ?? undefined, title: b.title ?? 'Aangan design consultation', start, end: new Date(b.endTime), body: `Booked via ${source}${c.email ? ` by ${c.email}` : ''}` });
       if (lead.hubspot_deal_id) await hubspot.setDealStage(lead.hubspot_deal_id, cancelled ? 'CLAIMED' : 'BOOKED');
-      await hubspot.addNote({ contactId: lead.hubspot_contact_id, dealId: lead.hubspot_deal_id, body: `<p><b>Consultation ${cancelled ? 'cancelled' : trigger === 'BOOKING_RESCHEDULED' ? 'rescheduled' : 'booked'}</b> · ${fmtIst(start)} (Cal.com)</p>` });
+      await hubspot.addNote({ contactId: lead.hubspot_contact_id, dealId: lead.hubspot_deal_id, body: `<p><b>Consultation ${cancelled ? 'cancelled' : trigger === 'BOOKING_RESCHEDULED' ? 'rescheduled' : 'booked'}</b> · ${fmtIst(start)} (${source})</p>` });
     } catch (e) { console.error('[booking] hubspot', e); }
   }
 
@@ -64,19 +64,36 @@ export async function applyBooking(trigger: string, b: CalBooking, c: { name: st
   return `${cancelled ? 'cancelled' : 'booked'} for lead ${lead.id}`;
 }
 
+// Calendly (free plan has no webhooks): poll recent bookings and apply any we haven't seen in this state.
+export async function syncCalendly() {
+  const { recentBookings } = await import('./calendly.ts');
+  const list = await recentBookings();
+  const results: string[] = [];
+  for (const b of list) {
+    const id = `calendly:${b.cancelled ? 'cancelled' : 'booked'}:${b.uid}:${b.startTime}`;
+    const { recordEvent } = await import('./db.ts');
+    if (!(await recordEvent(id, 'calendly', b.cancelled ? 'BOOKING_CANCELLED' : 'BOOKING_CREATED', b))) continue; // already applied
+    const out = await applyBooking(b.cancelled ? 'BOOKING_CANCELLED' : 'BOOKING_CREATED', b, { name: b.name ?? '', email: b.email ?? '', phone: b.phone, leadId: b.leadId }, 'Calendly');
+    if (out.startsWith('unmatched')) await db().from('webhook_events').update({ error: out }).eq('id', id);
+    else await db().from('webhook_events').update({ processed_at: new Date().toISOString() }).eq('id', id);
+    results.push(`${b.name ?? b.email}: ${out}`);
+  }
+  return { checked: list.length, applied: results };
+}
+
 // Called by the call pipeline once a lead exists: applies any booking that arrived first.
 export async function claimPendingBookings(phone?: string) {
   const digits = last10(phone);
   if (digits.length !== 10) return 0;
   const since = new Date(Date.now() - 2 * 864e5).toISOString();
-  const { data } = await db().from('webhook_events').select('id, type, payload').eq('source', 'calcom').like('error', 'unmatched%').gte('received_at', since);
+  const { data } = await db().from('webhook_events').select('id, type, payload, source').in('source', ['calcom', 'calendly']).like('error', 'unmatched%').gte('received_at', since);
   let n = 0;
   for (const ev of data ?? []) {
-    const p = (ev.payload as any)?.payload as CalBooking;
-    const { bookingContact } = await import('./calcom.ts');
-    const c = bookingContact(p);
+    let p: any, c: { name: string; email: string; phone?: string; leadId?: string };
+    if (ev.source === 'calendly') { p = ev.payload; c = { name: p.name ?? '', email: p.email ?? '', phone: p.phone, leadId: p.leadId }; }
+    else { const { bookingContact } = await import('./calcom.ts'); p = (ev.payload as any)?.payload as CalBooking; c = bookingContact(p); }
     if (last10(c.phone) !== digits) continue;
-    const out = await applyBooking(ev.type, p, c);
+    const out = await applyBooking(ev.type, p, c, ev.source === 'calendly' ? 'Calendly' : 'Cal.com');
     if (!out.startsWith('unmatched')) { await db().from('webhook_events').update({ error: null, processed_at: new Date().toISOString() }).eq('id', ev.id); n++; }
   }
   return n;

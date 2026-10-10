@@ -16,7 +16,7 @@ const read = (p: string) => readFileSync(new URL(`../agent/${p}`, import.meta.ur
 // Booking: Vaani AI books natively only with Cal.com. Until that's connected, Meera promises a booking link.
 const BOOKING_LINK_MODE = `## Booking the consultation (QUALIFIED callers only)
 
-Don't offer or book specific times on the call. Instead say: "I'll send you a link right after this call so you can pick a time for your free consultation that suits you, and your designer will also call you." Ask whether they'd like the link on email as well as WhatsApp/SMS; if yes, take the email and spell it back letter by letter. Ask whether they'd prefer the consultation at their site or at the studio, and when is usually best for them. Never name the designer; say "your designer".
+Don't offer or book specific times on the call. Instead say: "I'll send you a link right after this call so you can pick a time for your free consultation that suits you, and your designer will also call you." Ask for their email address so the booking link and the calendar invite reach them, and spell it back letter by letter. Ask whether they'd prefer the consultation at their site or at the studio, and when is usually best for them. Never name the designer; say "your designer".
 `;
 
 // Live booking through Vaani's Cal.com integration (Settings → Integrations → Cal.com).
@@ -31,7 +31,8 @@ Book the free consultation on the call using the calendar booking tool.
 6. If no time suits them, they won't share an email, or booking fails, don't push. Say you'll send a link so they can pick a time, and that a designer will call.
 Only offer times the calendar shows as free; never invent one. Never name the designer; say "your designer".
 `;
-const BOOKING_SECTION = process.env.BOOKING_MODE === 'link' ? BOOKING_LINK_MODE : BOOKING_CALCOM_MODE;
+// Calendly can't be booked live from Vaani, so Meera promises a link; set BOOKING_MODE=calcom to book live via Cal.com.
+const BOOKING_SECTION = process.env.BOOKING_MODE === 'calcom' ? BOOKING_CALCOM_MODE : BOOKING_LINK_MODE;
 
 const description = read('description.md')
   .replace(/^# .*\n+Paste this.*\n+---\n+/s, '')
