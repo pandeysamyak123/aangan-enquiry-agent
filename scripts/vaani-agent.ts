@@ -19,9 +19,23 @@ const BOOKING_LINK_MODE = `## Booking the consultation (QUALIFIED callers only)
 Don't offer or book specific times on the call. Instead say: "I'll send you a link right after this call so you can pick a time for your free consultation that suits you, and your designer will also call you." Ask whether they'd like the link on email as well as WhatsApp/SMS; if yes, take the email and spell it back letter by letter. Ask whether they'd prefer the consultation at their site or at the studio, and when is usually best for them. Never name the designer; say "your designer".
 `;
 
+// Live booking through Vaani's Cal.com integration (Settings → Integrations → Cal.com).
+const BOOKING_CALCOM_MODE = `## Booking the consultation (QUALIFIED callers only)
+
+Book the free consultation on the call using the calendar booking tool.
+1. Ask whether they'd like the consultation at their site or at the studio.
+2. Ask for their email address for the calendar invite, and spell it back letter by letter before using it. If they don't want to share an email, skip to step 6.
+3. Check the calendar for free times and offer two, at least one working day ahead, Monday to Saturday between 10am and 7pm. Respect what they've told you, for example "weekends only".
+4. When they choose one, book it with their name, email and phone number, then read it back: day, date, time, and site or studio.
+5. Say: "You'll get the calendar invite by email. Your designer will call you before then to introduce themselves."
+6. If no time suits them, they won't share an email, or booking fails, don't push. Say you'll send a link so they can pick a time, and that a designer will call.
+Only offer times the calendar shows as free; never invent one. Never name the designer; say "your designer".
+`;
+const BOOKING_SECTION = process.env.BOOKING_MODE === 'link' ? BOOKING_LINK_MODE : BOOKING_CALCOM_MODE;
+
 const description = read('description.md')
   .replace(/^# .*\n+Paste this.*\n+---\n+/s, '')
-  .replace(/## Booking the consultation \(QUALIFIED callers only\)[\s\S]*?(?=## Pricing)/, BOOKING_LINK_MODE + '\n');
+  .replace(/## Booking the consultation \(QUALIFIED callers only\)[\s\S]*?(?=## Pricing)/, BOOKING_SECTION + '\n');
 
 const services = read('knowledge/services.md').replace(/^# .*\n/, '');
 const systemPrompt = `${description}\n\n# Studio facts (answer only from these)\n${services}`;

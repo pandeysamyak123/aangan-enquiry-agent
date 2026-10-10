@@ -9,6 +9,8 @@ import * as hubspot from './hubspot.ts';
 import { emailEnabled, sendEmail, designerRecipients } from './email.ts';
 import { handoffEmail, alertEmail, callerEmail, type CallFacts } from './emails.ts';
 import { calendlyEnabled, singleUseLink } from './calendly.ts';
+import { calcomEnabled, calcomLink } from './calcom.ts';
+import { claimPendingBookings } from './bookings.ts';
 
 const OPEN_STATUSES = ['new', 'claimed', 'called', 'booked'];
 const REDIAL_WINDOW_MS = 30 * 60_000;
@@ -114,12 +116,15 @@ export async function handleCall(call: ParsedCall, eventId: string): Promise<Pip
     return `contact ${contact.id}${contact.existed ? ' (existing)' : ''}${dealId ? `, deal ${dealId}` : ''}`;
   });
 
-  // Calendly: single-use link for qualified callers who didn't book on the call.
+  // Booking: Meera books live via Vaani's Cal.com integration (the booking webhook updates the lead).
+  // If nothing was booked on the call, the caller gets a Cal.com link (or Calendly as fallback).
   let bookingLink: string | undefined;
-  await run('calendly', calendlyEnabled() && verdict.route === 'QUALIFIED' && !d.booked_slot, async () => {
-    bookingLink = await singleUseLink(lead.id, { name: d.caller_name, email: d.caller_email, phone });
+  await run('booking', (calcomEnabled() || calendlyEnabled()) && verdict.route === 'QUALIFIED', async () => {
+    const claimed = await claimPendingBookings(phone);
+    if (claimed || d.booked_slot) return claimed ? 'booked on the call (Cal.com)' : 'booked on the call';
+    bookingLink = calcomEnabled() ? calcomLink(lead.id, { name: d.caller_name, email: d.caller_email, phone }) : await singleUseLink(lead.id, { name: d.caller_name, email: d.caller_email, phone });
     await db().from('leads').update({ booking_link: bookingLink }).eq('id', lead.id);
-    return 'link created';
+    return calcomEnabled() ? 'Cal.com link created' : 'Calendly link created';
   });
 
   // Email (Resend): designers get qualified leads with one-tap actions; front desk / Nikhil get

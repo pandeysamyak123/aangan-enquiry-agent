@@ -29,7 +29,8 @@ export default async function Settings() {
             <Check ok={!!e.SUPABASE_SERVICE_ROLE_KEY} label="Supabase (database)" hint="Calls, leads, emails, designers" />
             <Check ok={!!e.RESEND_API_KEY} label="Resend (email)" hint={`From ${e.EMAIL_FROM ?? '—'}`} />
             <Check ok={!!e.HUBSPOT_TOKEN && !!e.HUBSPOT_PIPELINE_ID} label="HubSpot (CRM sync)" hint="Contacts, deals in “Aangan Enquiries”, call logs, tasks" />
-            <Check ok={!!e.CALENDLY_TOKEN} label="Calendly (booking links)" hint="Single-use booking link for qualified callers" />
+            <Check ok={!!e.CALCOM_BOOKING_URL && !!e.CALCOM_WEBHOOK_SECRET} label="Cal.com (consultation booking)" hint="Meera books live via Vaani; booking webhook marks leads booked" />
+            <Check ok={!!e.CALENDLY_TOKEN} label="Calendly (fallback link)" hint="Only used if Cal.com isn't set up" />
             <Check ok={!!e.CRON_SECRET} label="Scheduled jobs" hint="Overdue reminders, retries, 9pm digest" />
           </tbody></table>
         </section>

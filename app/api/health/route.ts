@@ -12,6 +12,7 @@ export async function GET() {
     hubspot: !!process.env.HUBSPOT_TOKEN && !!process.env.HUBSPOT_PIPELINE_ID,
     email: !!process.env.RESEND_API_KEY && !!process.env.DESIGNERS_EMAIL && !!process.env.LINK_SECRET,
     vaani_api: !!process.env.VAANI_API_KEY,
+    calcom: !!process.env.CALCOM_BOOKING_URL && !!process.env.CALCOM_WEBHOOK_SECRET,
     calendly: !!process.env.CALENDLY_TOKEN,
   });
 }
