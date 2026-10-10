@@ -1,9 +1,15 @@
-export const metadata = { title: 'Aangan Enquiries', description: 'Phone enquiry agent for Aangan Studio' };
+import './globals.css';
+
+export const metadata = {
+  title: 'Aangan Enquiries',
+  description: 'Every phone enquiry to Aangan Studio answered day or night, qualified against Nikhil’s rules, and handed to a designer with everything already asked.',
+};
+export const viewport = { width: 'device-width', initialScale: 1 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body style={{ margin: 0, fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif', background: '#f7f5f1', color: '#1f2421' }}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }
