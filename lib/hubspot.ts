@@ -74,11 +74,32 @@ export async function createDeal(p: {
   return deal.id;
 }
 
-export async function setDealStage(dealId: string, stageEnv: 'HUBSPOT_STAGE_CLAIMED' | 'HUBSPOT_STAGE_BOOKED' | 'HUBSPOT_STAGE_NOT_FIT', ownerId?: string | null) {
-  const stage = process.env[stageEnv];
-  if (!stage) return;
-  await hs('PATCH', `/crm/v3/objects/deals/${dealId}`, { properties: clean({ dealstage: stage, hubspot_owner_id: ownerId ?? undefined }) });
+export type StageKey = 'NEW' | 'CLAIMED' | 'BOOKED' | 'CONSULTED' | 'PROPOSAL' | 'WON' | 'LOST' | 'NOT_FIT';
+
+export async function setDealStage(dealId: string, stage: StageKey, extra: { amount?: number | null; ownerId?: string | null } = {}) {
+  const id = process.env[`HUBSPOT_STAGE_${stage}`];
+  if (!id) return;
+  await hs('PATCH', `/crm/v3/objects/deals/${dealId}`, {
+    properties: clean({
+      dealstage: id,
+      amount: extra.amount ?? undefined,
+      closedate: ['WON', 'LOST', 'NOT_FIT'].includes(stage) ? new Date().toISOString() : undefined,
+      hubspot_owner_id: extra.ownerId ?? undefined,
+    }),
+  });
 }
+
+// A note on the contact (and deal) timeline: designer actions, CRM notes.
+export async function addNote(p: { contactId?: string | null; dealId?: string | null; body: string; at?: Date }) {
+  if (!p.contactId && !p.dealId) return;
+  const note = await hs<{ id: string }>('POST', '/crm/v3/objects/notes', { properties: { hs_timestamp: (p.at ?? new Date()).toISOString(), hs_note_body: p.body } });
+  if (p.contactId) await associate('notes', note.id, 'contacts', p.contactId);
+  if (p.dealId) await associate('notes', note.id, 'deals', p.dealId);
+  return note.id;
+}
+
+export const recordUrl = (type: 'contact' | 'deal', id: string) =>
+  `https://${process.env.HUBSPOT_APP_HOST ?? 'app.hubspot.com'}/contacts/${process.env.HUBSPOT_PORTAL_ID}/record/${type === 'contact' ? '0-1' : '0-3'}/${id}`;
 
 export async function logCall(p: {
   contactId: string; dealId?: string; title: string; body: string; durationSec?: number; at: Date; recordingUrl?: string; failed?: boolean;

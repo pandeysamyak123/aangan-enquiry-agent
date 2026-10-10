@@ -108,7 +108,7 @@ export async function handleCall(call: ParsedCall, eventId: string): Promise<Pip
     await hubspot.logCall({
       contactId: contact.id, dealId, at, durationSec: call.durationSec, recordingUrl: call.recordingUrl, failed: call.input.status !== 'COMPLETED',
       title: `Voice agent · ${verdict.route}${verdict.declineReason ? ` (${verdict.declineReason})` : ''}`,
-      body: [call.summary, d.scope && `Scope: ${d.scope}`, verdict.flags.length ? `Flags: ${verdict.flags.join(' | ')}` : ''].filter(Boolean).join('\n\n'),
+      body: callBody(call, verdict, lead.id),
     });
     await db().from('leads').update({ hubspot_contact_id: contact.id, hubspot_deal_id: dealId ?? null }).eq('id', lead.id);
     return `contact ${contact.id}${contact.existed ? ' (existing)' : ''}${dealId ? `, deal ${dealId}` : ''}`;
@@ -150,3 +150,29 @@ export async function handleCall(call: ParsedCall, eventId: string): Promise<Pip
   await db().from('lead_actions').insert({ lead_id: lead.id, actor: 'system', action: `call_${verdict.route.toLowerCase()}`, detail: { call_id: callRow.id, steps } });
   return { leadId: lead.id, callId: callRow.id, verdict, returning, merged: !!existing, steps };
 }
+
+// Everything about the call, as the HubSpot call log body (HubSpot renders basic HTML).
+const FIELD_ORDER: [keyof NonNullable<ParsedCall['input']['data']>, string][] = [
+  ['caller_name', 'Name'], ['callback_number', 'Callback'], ['caller_email', 'Email'], ['caller_role', 'Decision-maker'],
+  ['project_type', 'Project type'], ['property', 'Property'], ['location_area', 'Location'], ['carpet_area_sqft', 'Carpet area (sq ft)'],
+  ['scope', 'Scope'], ['execution_wanted', 'Wants execution'], ['current_state', 'Site state'], ['timeline', 'Timeline'],
+  ['budget_volunteered', 'Budget (volunteered)'], ['referral_source', 'Source'], ['pricing_asked', 'Asked about price'],
+  ['preferred_callback_time', 'Best time to call'], ['consult_location', 'Consultation at'], ['booked_slot', 'Booked slot'],
+  ['notes_for_designer', 'Notes'], ['escalation_detail', 'Escalation'],
+];
+const h = (s: unknown) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+export function callBody(call: Pick<ParsedCall, "summary" | "transcript" | "input">, v: Pick<Verdict, "route" | "declineReason" | "mismatch" | "agentRoute" | "flags">, leadId: string) {
+  const d = (call.input.data ?? {}) as Record<string, unknown>;
+  const fields = FIELD_ORDER.filter(([k]) => d[k] !== undefined && d[k] !== null && d[k] !== '').map(([k, l]) => `<li><b>${l}:</b> ${h(d[k])}</li>`).join('');
+  const transcript = typeof call.transcript === 'string' ? call.transcript : Array.isArray(call.transcript) ? call.transcript.map((m: any) => `${m.role ?? ''}: ${m.text ?? ''}`).join('\n') : '';
+  return [
+    `<p><b>Route:</b> ${v.route}${v.declineReason ? ` (${v.declineReason})` : ''}${v.mismatch ? ` · agent said ${v.agentRoute}, needs review` : ''}</p>`,
+    call.summary ? `<p><b>Summary:</b> ${h(call.summary)}</p>` : '',
+    fields ? `<ul>${fields}</ul>` : '',
+    v.flags.length ? `<p><b>Flags:</b> ${v.flags.map(h).join(' · ')}</p>` : '',
+    process.env.APP_URL ? `<p><a href="${process.env.APP_URL}/dashboard/leads/${leadId}">Open in Aangan CRM</a></p>` : '',
+    transcript ? `<p><b>Transcript</b></p><pre>${h(transcript).slice(0, 60000)}</pre>` : '',
+  ].filter(Boolean).join('');
+}
+

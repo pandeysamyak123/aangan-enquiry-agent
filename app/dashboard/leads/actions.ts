@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { db } from '@/lib/db.ts';
+import * as hubspot from '@/lib/hubspot.ts';
 import { applyLeadAction } from '@/lib/leadActions.ts';
 import { LEAD_ACTIONS, type LeadAction } from '@/lib/links.ts';
 import { SESSION_COOKIE, validSession } from '@/lib/session.ts';
@@ -28,6 +29,11 @@ export async function saveNotes(formData: FormData) {
   const leadId = String(formData.get('leadId'));
   const notes = String(formData.get('notes') ?? '').slice(0, 5000);
   await db().from('leads').update({ notes, updated_at: new Date().toISOString() }).eq('id', leadId);
-  await db().from('lead_actions').insert({ lead_id: leadId, actor: (await cookies()).get('aangan_who')?.value ?? 'Studio', action: 'note', detail: { text: notes.slice(0, 280) } });
+  const actor = (await cookies()).get('aangan_who')?.value ?? 'Studio';
+  await db().from('lead_actions').insert({ lead_id: leadId, actor, action: 'note', detail: { text: notes.slice(0, 280) } });
+  const { data: lead } = await db().from('leads').select('hubspot_contact_id, hubspot_deal_id').eq('id', leadId).single();
+  if (notes.trim() && lead && hubspot.hubspotEnabled()) {
+    try { await hubspot.addNote({ contactId: lead.hubspot_contact_id, dealId: lead.hubspot_deal_id, body: `<p><b>Note from ${actor}</b> (Aangan CRM)</p><p>${notes.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>')}</p>` }); } catch (e) { console.error('[notes] hubspot', e); }
+  }
   revalidatePath(`/dashboard/leads/${leadId}`);
 }

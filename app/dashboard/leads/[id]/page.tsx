@@ -6,6 +6,7 @@ import { db } from '@/lib/db.ts';
 import { fmtIst } from '@/lib/hours.ts';
 import { ACTION_LABEL, NEXT_ACTIONS } from '@/lib/leadActions.ts';
 import { leadAction, saveNotes } from '../actions.ts';
+import { recordUrl } from '@/lib/hubspot.ts';
 import { RoutePill, StatusBadge, EmailEvent, BackLink, clock, inr, FIELD_LABELS, ObjIcon } from '../../ui.tsx';
 
 export const dynamic = 'force-dynamic';
@@ -39,7 +40,7 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
   const latest = (calls?.[0]?.collected ?? {}) as Record<string, any>;
   const who = (await cookies()).get('aangan_who')?.value ?? '';
   const next = NEXT_ACTIONS[lead.status] ?? [];
-  const hubspotUrl = lead.hubspot_deal_id && process.env.HUBSPOT_PORTAL_ID ? `https://app.hubspot.com/contacts/${process.env.HUBSPOT_PORTAL_ID}/record/0-3/${lead.hubspot_deal_id}` : null;
+  const hubspotUrl = !process.env.HUBSPOT_PORTAL_ID ? null : lead.hubspot_deal_id ? recordUrl('deal', lead.hubspot_deal_id) : lead.hubspot_contact_id ? recordUrl('contact', lead.hubspot_contact_id) : null;
 
   const events: Ev[] = [
     ...(calls ?? []).map((c: any) => ({
