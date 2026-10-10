@@ -9,6 +9,7 @@ import { leadAction, saveNotes } from '../actions.ts';
 import { RoutePill, StatusBadge, EmailEvent, BackLink, clock, inr, FIELD_LABELS } from '../../ui.tsx';
 
 export const dynamic = 'force-dynamic';
+export const metadata = { title: 'Lead · Aangan CRM' };
 
 type Ev = { at: string; icon: string; title: React.ReactNode; sub?: React.ReactNode };
 

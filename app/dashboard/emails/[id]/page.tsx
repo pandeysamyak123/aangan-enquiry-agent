@@ -6,6 +6,7 @@ import { refreshStatuses } from '../actions.ts';
 import { EmailEvent, BackLink } from '../../ui.tsx';
 
 export const dynamic = 'force-dynamic';
+export const metadata = { title: 'Email · Aangan CRM' };
 
 export default async function EmailDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

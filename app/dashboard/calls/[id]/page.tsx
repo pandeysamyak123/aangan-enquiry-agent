@@ -7,6 +7,7 @@ import { DECLINE_LABEL } from '@/lib/metrics.ts';
 import { RoutePill, StatusBadge, EmailEvent, BackLink, clock, inr, parseTranscript, FIELD_LABELS } from '../../ui.tsx';
 
 export const dynamic = 'force-dynamic';
+export const metadata = { title: 'Call · Aangan CRM' };
 
 export default async function CallDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
