@@ -190,12 +190,12 @@ code { font-family: var(--mono); font-size: 0.92em; }
         <text x="581" y="388" font-family="IBM Plex Mono, Menlo, monospace" font-size="10.5" fill="#4a5563">handoff channel (not Telegram)</text>
 
         <rect x="838" y="280" width="240" height="118" rx="8" fill="#ffffff" stroke="#17202a" stroke-width="1.2"/>
-        <text x="852" y="302" font-size="14" font-weight="700">Cal.com booking</text>
-        <text x="852" y="320" font-size="12" fill="#4a5563">Meera books the slot live</text>
-        <text x="852" y="336" font-size="12" fill="#4a5563">via Vaani’s Cal.com link;</text>
-        <text x="852" y="352" font-size="12" fill="#4a5563">booking webhook marks the</text>
-        <text x="852" y="368" font-size="12" fill="#4a5563">lead booked + HubSpot meeting.</text>
-        <text x="852" y="388" font-family="IBM Plex Mono, Menlo, monospace" font-size="10.5" fill="#4a5563">invite · Calendly link fallback</text>
+        <text x="852" y="302" font-size="14" font-weight="700">Calendly booking</text>
+        <text x="852" y="320" font-size="12" fill="#4a5563">Booking link emailed to the</text>
+        <text x="852" y="336" font-size="12" fill="#4a5563">caller, tagged with their lead;</text>
+        <text x="852" y="352" font-size="12" fill="#4a5563">15-min sync marks the lead</text>
+        <text x="852" y="368" font-size="12" fill="#4a5563">booked + HubSpot meeting.</text>
+        <text x="852" y="388" font-family="IBM Plex Mono, Menlo, monospace" font-size="10.5" fill="#4a5563">60-min consultation · invite</text>
 
         <rect x="1109" y="280" width="265" height="118" rx="8" fill="#ffffff" stroke="#17202a" stroke-width="1.2"/>
         <text x="1123" y="302" font-size="14" font-weight="700">Aangan CRM dashboard</text>
@@ -216,7 +216,7 @@ code { font-family: var(--mono); font-size: 0.92em; }
       </g>
       <g font-family="IBM Plex Mono, Menlo, monospace" font-size="10.5" fill="#b4541a">
         <text x="693" y="438">lead + one-tap Claim</text>
-        <text x="964" y="438">invite / booking link</text>
+        <text x="964" y="438">booking link → invite</text>
         <text x="1247" y="438">overview · review</text>
         <text x="424" y="430">Claim / Booked / Won</text>
         <text x="424" y="444">→ deal stage + note</text>
@@ -233,8 +233,8 @@ code { font-family: var(--mono); font-size: 0.92em; }
 
         <rect x="838" y="470" width="240" height="96" rx="8" fill="#fbefe6" stroke="#b4541a" stroke-width="1.5"/>
         <text x="852" y="492" font-size="14" font-weight="700">Caller</text>
-        <text x="852" y="510" font-size="12" fill="#4a5563">Gets the consultation invite</text>
-        <text x="852" y="526" font-size="12" fill="#4a5563">(or a link to pick a slot) and</text>
+        <text x="852" y="510" font-size="12" fill="#4a5563">Picks a free consultation</text>
+        <text x="852" y="526" font-size="12" fill="#4a5563">slot from the link and gets</text>
         <text x="852" y="542" font-size="12" fill="#4a5563">a call from their designer.</text>
 
         <rect x="1109" y="470" width="265" height="96" rx="8" fill="#fbefe6" stroke="#b4541a" stroke-width="1.5"/>
@@ -245,10 +245,11 @@ code { font-family: var(--mono); font-size: 0.92em; }
         <text x="1123" y="558" font-size="11" fill="#4a5563">Owns prices and the five checks.</text>
 
         <rect x="25" y="470" width="511" height="96" rx="8" fill="none" stroke="#d9d5cc" stroke-width="1.2" stroke-dasharray="4 4"/>
-        <text x="39" y="492" font-size="13" font-weight="700">Scheduled jobs (no person needed)</text>
-        <text x="39" y="512" font-size="12" fill="#4a5563">Every 5 min: retry calls whose details weren’t ready.</text>
-        <text x="39" y="530" font-size="12" fill="#4a5563">Every 15 min: email Nikhil about callers past their promise.</text>
-        <text x="39" y="548" font-size="12" fill="#4a5563">Daily 9pm IST: numbers + declined calls digest.</text>
+        <text x="39" y="490" font-size="13" font-weight="700">Scheduled jobs (no person needed)</text>
+        <text x="39" y="508" font-size="12" fill="#4a5563">Every 5 min: retry calls whose details weren’t ready.</text>
+        <text x="39" y="524" font-size="12" fill="#4a5563">Every 15 min: email Nikhil about callers past their promise.</text>
+        <text x="39" y="540" font-size="12" fill="#4a5563">Every 15 min: Calendly bookings → lead + HubSpot.</text>
+        <text x="39" y="556" font-size="12" fill="#4a5563">Daily 9pm IST: numbers + declined calls digest.</text>
       </g>
     </svg>
     </div>
@@ -274,7 +275,7 @@ code { font-family: var(--mono); font-size: 0.92em; }
         <tr><td>Output</td><td><b>Supabase</b></td><td>Calls, leads, emails, designer actions, event log; powers the dashboard.</td><td>Webhook returns error; Vaani retries for ~4 h.</td></tr>
         <tr><td>Output</td><td><b>HubSpot</b></td><td>Contact, deal in “Aangan Enquiries”, call log with transcript, tasks, notes; stages move with designer actions.</td><td>Logged on the call; email and CRM still go out.</td></tr>
         <tr><td>Output</td><td><b>Resend email</b></td><td>Designer handoff with signed one-tap actions; complaint, overdue and digest emails; caller booking link.</td><td>Failure logged in the Emails tab; lead still visible in CRM and HubSpot.</td></tr>
-        <tr><td>Output</td><td><b>Cal.com</b> (Calendly as fallback link)</td><td>Meera books a free consultation slot during the call via Vaani’s Cal.com integration; Cal.com’s booking webhook marks the lead booked and logs a HubSpot meeting.</td><td>No slot fits → designer fixes the time on the callback.</td></tr>
+        <tr><td>Output</td><td><b>Calendly</b></td><td>“Aangan design consultation” (60 min). Qualified callers get a booking link tagged with their lead; a 15-minute sync marks the lead booked, logs a HubSpot meeting and emails the designer.</td><td>Caller doesn’t book → designer fixes the time on the callback.</td></tr>
         <tr><td>Output</td><td><b>Aangan CRM</b> (Next.js on Vercel)</td><td>Overview, calls, lead pipeline and timeline, email log, designers, settings, CSV export.</td><td>Read-only view; data stays in Supabase and HubSpot.</td></tr>
       </tbody>
     </table>
