@@ -28,7 +28,7 @@ export default async function Designers() {
 
   return (
     <>
-      <PageHead eyebrow="Who gets the handoff emails, and how they’re doing" title="Designers" />
+      <PageHead obj="designer" eyebrow="Who gets the handoff emails, and how they’re doing" title="Designers" />
       <div className="grid g-2" style={{ alignItems: 'start' }}>
         <section className="card">
           <h2 style={{ fontSize: 16, margin: '0 0 6px' }}>Team</h2>

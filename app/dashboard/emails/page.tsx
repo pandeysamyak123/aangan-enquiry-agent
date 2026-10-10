@@ -21,7 +21,7 @@ export default async function Emails({ searchParams }: { searchParams: Promise<L
 
   return (
     <>
-      <PageHead eyebrow="Everything the system emailed" title="Emails">
+      <PageHead obj="email" eyebrow="Everything the system emailed" title="Emails">
         <form action={refreshStatuses}><button className="btn">↻ Refresh delivery status</button></form>
       </PageHead>
       <section className="grid g-4" style={{ marginBottom: 14 }}>

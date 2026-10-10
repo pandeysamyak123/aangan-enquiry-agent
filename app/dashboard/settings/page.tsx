@@ -20,7 +20,7 @@ export default async function Settings() {
 
   return (
     <>
-      <PageHead eyebrow="How the system is wired" title="Settings" />
+      <PageHead obj="setup" eyebrow="How the system is wired" title="Settings" />
       <div className="grid g-2" style={{ alignItems: 'start' }}>
         <section className="card">
           <h2 style={{ fontSize: 16, margin: '0 0 10px' }}>Integrations</h2>

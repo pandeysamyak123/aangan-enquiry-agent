@@ -18,10 +18,17 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
   const overdue = await overdueCount().catch(() => 0);
   return (
     <div className="app">
+      <header className="gheader">
+        <Link href="/dashboard" className="brand"><span className="brand-mark">A</span><span className="hide-sm">Aangan CRM</span></Link>
+        <form action="/dashboard/calls" className="search-wrap" role="search">
+          <input className="input" name="q" placeholder="Search calls by name, area, number…" aria-label="Search" />
+        </form>
+        <Link href="/" className="btn hide-sm">Website</Link>
+        <span className="avatar" title="Studio account">A</span>
+      </header>
       <aside className="side" aria-label="CRM navigation">
-        <Link href="/" className="brand"><span className="brand-mark">A</span>Aangan CRM</Link>
         <SideNav overdue={overdue} />
-        <div className="side-foot">Enquiry agent · Vaani AI<br /><a href="/logout">Sign out</a></div>
+        <div className="side-foot">Meera · Vaani AI<br /><a href="/logout">Sign out</a></div>
       </aside>
       <main className="main">{children}</main>
     </div>

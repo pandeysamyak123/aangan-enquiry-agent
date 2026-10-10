@@ -25,7 +25,7 @@ export default async function Calls({ searchParams }: { searchParams: Promise<Li
 
   return (
     <>
-      <PageHead eyebrow="Every call Meera answered" title="Calls">
+      <PageHead obj="call" eyebrow="Every call Meera answered" title="Calls">
         <a className="btn" href={`/api/export/calls${qs(base, {})}`}>⬇ Export CSV</a>
       </PageHead>
 

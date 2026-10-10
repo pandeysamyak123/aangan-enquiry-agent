@@ -33,11 +33,26 @@ export function EmailEvent({ event, status }: { event?: string | null; status?: 
   return <span className="status" style={{ color: 'var(--ink-2)' }}>● {e.replace(/_/g, ' ')}</span>;
 }
 
-export function PageHead({ eyebrow, title, children }: { eyebrow?: string; title: string; children?: React.ReactNode }) {
+export const OBJ = {
+  home: { ico: '◧', c: 'var(--o-dashboard)' }, call: { ico: '☎', c: 'var(--o-call)' }, lead: { ico: '★', c: 'var(--o-lead)' },
+  email: { ico: '✉', c: 'var(--o-email)' }, designer: { ico: '☺', c: 'var(--o-contact)' }, setup: { ico: '⚙', c: 'var(--o-setup)' },
+} as const;
+export type Obj = keyof typeof OBJ;
+
+export function ObjIcon({ obj, size }: { obj: Obj; size?: 'sm' | 'lg' }) {
+  return <span className={`obj-icon${size ? ' ' + size : ''}`} style={{ background: OBJ[obj].c }} aria-hidden>{OBJ[obj].ico}</span>;
+}
+
+// Salesforce-style page header: object icon, object name, title, actions.
+export function PageHead({ eyebrow, title, obj, children, below }: { eyebrow?: string; title: React.ReactNode; obj?: Obj; children?: React.ReactNode; below?: React.ReactNode }) {
   return (
-    <div className="page-head">
-      <div>{eyebrow && <div className="eyebrow">{eyebrow}</div>}<h1>{title}</h1></div>
+    <div className="page-head anim-up">
+      <div className="ph-left">
+        {obj && <ObjIcon obj={obj} size="lg" />}
+        <div style={{ minWidth: 0 }}>{eyebrow && <div className="eyebrow">{eyebrow}</div>}<h1>{title}</h1></div>
+      </div>
       {children && <div className="toolbar" style={{ margin: 0 }}>{children}</div>}
+      {below}
     </div>
   );
 }

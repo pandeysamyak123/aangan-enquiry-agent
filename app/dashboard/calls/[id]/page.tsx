@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db.ts';
 import { fmtIst } from '@/lib/hours.ts';
 import { DECLINE_LABEL } from '@/lib/metrics.ts';
-import { RoutePill, StatusBadge, EmailEvent, BackLink, clock, inr, parseTranscript, FIELD_LABELS } from '../../ui.tsx';
+import { RoutePill, StatusBadge, EmailEvent, BackLink, clock, inr, parseTranscript, FIELD_LABELS, ObjIcon } from '../../ui.tsx';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Call · Aangan CRM' };
@@ -25,18 +25,21 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
   return (
     <>
       <BackLink href="/dashboard/calls" label="All calls" />
-      <div className="page-head" style={{ marginTop: 8 }}>
-        <div>
-          <div className="eyebrow">{fmtIst(c.started_at ?? c.created_at)}{c.after_hours ? ' · 🌙 after hours' : ''} · {clock(c.duration_sec)} · {inr((c.cost_paise ?? 0) / 100, 2)}{c.cost_estimated ? ' (est.)' : ''}</div>
+      <div className="page-head anim-up" style={{ marginTop: 8 }}>
+        <div className="ph-left">
+          <ObjIcon obj="call" size="lg" />
+          <div>
+          <div className="eyebrow">Call · {fmtIst(c.started_at ?? c.created_at)}{c.after_hours ? ' · 🌙 after hours' : ''} · {clock(c.duration_sec)} · {inr((c.cost_paise ?? 0) / 100, 2)}{c.cost_estimated ? ' (est.)' : ''}</div>
           <h1>{d.caller_name ?? 'Unknown caller'} <span style={{ verticalAlign: 'middle' }}><RoutePill route={c.route} /></span></h1>
           <div className="ink-2 num">{d.callback_number ?? c.from_number ?? ''}{d.caller_email ? ` · ${d.caller_email}` : ''}</div>
+          </div>
         </div>
         {lead && <Link className="btn btn-primary" href={`/dashboard/leads/${lead.id}`}>Open lead →</Link>}
       </div>
 
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', alignItems: 'start' }}>
         <div className="grid">
-          <section className="card">
+          <section className="card anim-up">
             <h2 style={{ fontSize: 16, margin: '0 0 8px' }}>Summary</h2>
             <p style={{ margin: 0 }}>{c.summary ?? <span className="muted">No summary.</span>}</p>
             {hasRecording && (
@@ -46,7 +49,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
             )}
           </section>
 
-          <section className="card">
+          <section className="card anim-up">
             <h2 style={{ fontSize: 16, margin: '0 0 8px' }}>Transcript</h2>
             {lines.length === 0 && <p className="muted" style={{ margin: 0 }}>{typeof c.transcript === 'string' && c.transcript ? c.transcript : 'No transcript for this call.'}</p>}
             <div>
@@ -60,7 +63,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
         </div>
 
         <div className="grid">
-          <section className="card">
+          <section className="card anim-up">
             <h2 style={{ fontSize: 16, margin: '0 0 8px' }}>Routing</h2>
             <dl className="kv">
               <dt>Outcome</dt><dd><RoutePill route={c.route} />{c.decline_reason ? ` · ${DECLINE_LABEL[c.decline_reason] ?? c.decline_reason}` : ''}</dd>
@@ -72,7 +75,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
             </dl>
           </section>
 
-          <section className="card">
+          <section className="card anim-up">
             <h2 style={{ fontSize: 16, margin: '0 0 8px' }}>What Meera captured</h2>
             <dl className="kv">
               {FIELD_LABELS.filter(([k]) => d[k] !== undefined && d[k] !== null && d[k] !== '').map(([k, label]) => (
@@ -82,7 +85,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
             {FIELD_LABELS.every(([k]) => d[k] === undefined || d[k] === null || d[k] === '') && <p className="muted" style={{ margin: 0 }}>Nothing captured (dropped or failed call).</p>}
           </section>
 
-          <section className="card">
+          <section className="card anim-up">
             <h2 style={{ fontSize: 16, margin: '0 0 8px' }}>Emails from this call</h2>
             {(emails ?? []).length === 0 && <p className="muted" style={{ margin: 0 }}>No emails sent for this call.</p>}
             {(emails ?? []).map((e: any) => (
@@ -94,7 +97,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
           </section>
 
           {(others ?? []).length > 0 && (
-            <section className="card">
+            <section className="card anim-up">
               <h2 style={{ fontSize: 16, margin: '0 0 8px' }}>Other calls from this caller</h2>
               {(others ?? []).map((o: any) => <div key={o.id} style={{ fontSize: 14, padding: '4px 0' }}><Link href={`/dashboard/calls/${o.id}`}>{fmtIst(o.created_at)}</Link> · <RoutePill route={o.route} /></div>)}
             </section>

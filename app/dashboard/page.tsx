@@ -8,9 +8,9 @@ import { inr, pct, mins, clock, RoutePill, StatusBadge, PageHead } from './ui.ts
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Overview · Aangan CRM' };
 
-function Tile({ label, value, sub, href, tone }: { label: string; value: string; sub?: string; href?: string; tone?: 'critical' }) {
+function Tile({ label, value, sub, href, tone, i = 0 }: { label: string; value: string; sub?: string; href?: string; tone?: 'critical'; i?: number }) {
   const body = (
-    <div className="card" style={{ height: '100%' }}>
+    <div className={`card card-hover anim-up d${i + 1}`} style={{ height: '100%' }}>
       <div className="tile-label">{label}</div>
       <div className="tile-value" style={tone === 'critical' ? { color: 'var(--critical)' } : undefined}>{value}</div>
       {sub && <div className="tile-sub">{sub}</div>}
@@ -28,23 +28,23 @@ export default async function Overview({ searchParams }: { searchParams: Promise
 
   return (
     <>
-      <PageHead eyebrow={`Updated ${fmtIst(new Date())}`} title="Overview">
+      <PageHead obj="home" eyebrow={`Updated ${fmtIst(new Date())}`} title="Overview">
         <div className="seg" role="group" aria-label="Date range">
           {[7, 30, 90].map((d) => <Link key={d} href={`/dashboard?days=${d}`} aria-current={d === days ? 'true' : undefined}>{d} days</Link>)}
         </div>
       </PageHead>
 
       <section className="grid g-4" aria-label="Key numbers">
-        <Tile label="Calls answered" value={String(t.calls)} sub={`${t.afterHours} after hours (${pct(t.afterHours, t.calls)})`} href="/dashboard/calls" />
-        <Tile label="Qualified leads" value={String(t.qualified)} sub={`${pct(t.qualified, t.calls)} of calls · ${t.nurture} nurture`} href="/dashboard/leads" />
-        <Tile label="Consultations booked" value={String(m.funnel[3].n)} sub={`${pct(m.funnel[3].n, m.funnel[0].n)} of qualified`} href="/dashboard/leads?status=booked" />
-        <Tile label="Median time to claim" value={mins(m.speed.medianClaimMins)} sub={`Callbacks on time: ${pct(m.speed.withinPromise, m.speed.calledWithPromise)}`} />
-        <Tile label="Waiting past promise" value={String(m.speed.overdue.length)} sub={`${m.speed.waiting.length} callers waiting`} href="/dashboard/leads?view=attention" tone={m.speed.overdue.length ? 'critical' : undefined} />
-        <Tile label="Cost of the agent" value={inr(m.cost.inr)} sub={`${m.cost.minutes} min · ${inr(m.cost.perQualified)} / qualified lead`} href="/dashboard/settings" />
+        <Tile i={0} label="Calls answered" value={String(t.calls)} sub={`${t.afterHours} after hours (${pct(t.afterHours, t.calls)})`} href="/dashboard/calls" />
+        <Tile i={1} label="Qualified leads" value={String(t.qualified)} sub={`${pct(t.qualified, t.calls)} of calls · ${t.nurture} nurture`} href="/dashboard/leads" />
+        <Tile i={2} label="Consultations booked" value={String(m.funnel[3].n)} sub={`${pct(m.funnel[3].n, m.funnel[0].n)} of qualified`} href="/dashboard/leads?status=booked" />
+        <Tile i={3} label="Median time to claim" value={mins(m.speed.medianClaimMins)} sub={`Callbacks on time: ${pct(m.speed.withinPromise, m.speed.calledWithPromise)}`} />
+        <Tile i={4} label="Waiting past promise" value={String(m.speed.overdue.length)} sub={`${m.speed.waiting.length} callers waiting`} href="/dashboard/leads?view=attention" tone={m.speed.overdue.length ? 'critical' : undefined} />
+        <Tile i={5} label="Cost of the agent" value={inr(m.cost.inr)} sub={`${m.cost.minutes} min · ${inr(m.cost.perQualified)} / qualified lead`} href="/dashboard/settings" />
       </section>
 
       <div className="section-title"><h2>Calls per day</h2><span className="muted">by outcome · IST · last {days} days</span></div>
-      <div className="card"><CallsChart data={m.daily} groups={GROUPS} /></div>
+      <div className="card anim-up d3"><CallsChart data={m.daily} groups={GROUPS} /></div>
 
       <div className="grid g-2" style={{ marginTop: 14 }}>
         <section className="card" aria-label="Lead funnel">
@@ -55,7 +55,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
                 <span>{f.label}</span><span className="num"><b>{f.n}</b>{i > 0 && <span className="muted"> · {pct(f.n, m.funnel[0].n)}</span>}</span>
               </div>
               <div style={{ height: 10, background: 'var(--surface-2)', borderRadius: 4, marginTop: 4 }}>
-                <div style={{ width: `${(f.n / funnelMax) * 100}%`, minWidth: f.n ? 6 : 0, height: '100%', background: 'var(--s-qualified)', borderRadius: '0 4px 4px 0' }} />
+                <div style={{ width: `${(f.n / funnelMax) * 100}%`, minWidth: f.n ? 6 : 0, height: '100%', background: 'var(--s-qualified)', borderRadius: '0 4px 4px 0', animationDelay: `${i * 80}ms` }} className="bar-grow" />
               </div>
             </div>
           ))}

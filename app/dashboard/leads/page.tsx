@@ -36,7 +36,7 @@ export default async function Leads({ searchParams }: { searchParams: Promise<Li
 
   return (
     <>
-      <PageHead eyebrow="Callers and where they are in the pipeline" title="Leads">
+      <PageHead obj="lead" eyebrow="Callers and where they are in the pipeline" title="Leads">
         <a className="btn" href={`/api/export/leads${qs(base, {})}`}>⬇ Export CSV</a>
       </PageHead>
       <nav className="tabs" aria-label="Lead views">

@@ -6,10 +6,24 @@ import { db } from '@/lib/db.ts';
 import { fmtIst } from '@/lib/hours.ts';
 import { ACTION_LABEL, NEXT_ACTIONS } from '@/lib/leadActions.ts';
 import { leadAction, saveNotes } from '../actions.ts';
-import { RoutePill, StatusBadge, EmailEvent, BackLink, clock, inr, FIELD_LABELS } from '../../ui.tsx';
+import { RoutePill, StatusBadge, EmailEvent, BackLink, clock, inr, FIELD_LABELS, ObjIcon } from '../../ui.tsx';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Lead · Aangan CRM' };
+
+const PATH = [['new', 'New'], ['claimed', 'Claimed'], ['called', 'Called back'], ['booked', 'Booked'], ['consulted', 'Consulted'], ['won', 'Won']] as const;
+function LeadPath({ status }: { status: string }) {
+  const lost = ['lost', 'not_fit'].includes(status);
+  const idx = PATH.findIndex(([k]) => k === status);
+  return (
+    <nav className="path anim-up d1" aria-label="Lead stage">
+      {PATH.map(([k, label], i) => {
+        const cls = lost ? (i === PATH.length - 1 ? 'lost' : '') : i < idx ? 'done' : i === idx ? 'current' : '';
+        return <div key={k} className={`path-step ${cls}`} aria-current={i === idx ? 'step' : undefined}>{lost && i === PATH.length - 1 ? (status === 'lost' ? 'Lost' : 'Not a fit') : i < idx && !lost ? `✓ ${label}` : label}</div>;
+      })}
+    </nav>
+  );
+}
 
 type Ev = { at: string; icon: string; title: React.ReactNode; sub?: React.ReactNode };
 
@@ -48,22 +62,34 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
   return (
     <>
       <BackLink href="/dashboard/leads" label="All leads" />
-      <div className="page-head" style={{ marginTop: 8 }}>
-        <div>
-          <div className="eyebrow">Lead since {fmtIst(lead.created_at)}{lead.after_hours ? ' · first called after hours' : ''}</div>
-          <h1>{lead.name ?? 'Unknown caller'} <span style={{ verticalAlign: 'middle' }}><RoutePill route={lead.route} /></span></h1>
-          <div className="ink-2 num">{lead.phone ?? 'No number'}{latest.caller_email ? ` · ${latest.caller_email}` : ''}</div>
+      <div className="page-head anim-up" style={{ marginTop: 8 }}>
+        <div className="ph-left">
+          <ObjIcon obj="lead" size="lg" />
+          <div>
+            <div className="eyebrow">Lead{lead.after_hours ? ' · first called after hours' : ''}</div>
+            <h1>{lead.name ?? 'Unknown caller'} <span style={{ verticalAlign: 'middle' }}><RoutePill route={lead.route} /></span></h1>
+          </div>
         </div>
         <div className="toolbar" style={{ margin: 0 }}>
           {lead.phone && <a className="btn" href={`tel:${lead.phone}`}>📞 Call</a>}
           {lead.phone && <a className="btn" href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer">WhatsApp</a>}
           {hubspotUrl && <a className="btn" href={hubspotUrl} target="_blank" rel="noreferrer">HubSpot ↗</a>}
         </div>
+        <div className="highlights">
+          <div>Phone<b className="num">{lead.phone ?? '—'}</b></div>
+          <div>Project<b>{[latest.property, latest.location_area].filter(Boolean).join(' · ') || '—'}</b></div>
+          <div>Owner<b>{lead.claimed_by_name ?? 'Unclaimed'}</b></div>
+          <div>Promised callback<b>{fmtIst(lead.promise_at)}</b></div>
+          <div>Source<b>{latest.referral_source ?? '—'}</b></div>
+          <div>Created<b>{fmtIst(lead.created_at)}</b></div>
+        </div>
       </div>
+
+      {lead.route === 'QUALIFIED' && <LeadPath status={lead.status} />}
 
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', alignItems: 'start' }}>
         <div className="grid">
-          <section className="card">
+          <section className="card anim-up">
             <h2 style={{ fontSize: 16, margin: '0 0 10px' }}>Status</h2>
             <dl className="kv">
               <dt>Stage</dt><dd><StatusBadge status={lead.status} promiseAt={lead.promise_at} /></dd>
@@ -90,7 +116,7 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
             )}
           </section>
 
-          <section className="card">
+          <section className="card anim-up">
             <h2 style={{ fontSize: 16, margin: '0 0 10px' }}>Project</h2>
             <dl className="kv">
               {FIELD_LABELS.filter(([k]) => !['caller_name', 'callback_number', 'caller_email'].includes(k) && latest[k] !== undefined && latest[k] !== null && latest[k] !== '').map(([k, label]) => (
@@ -99,7 +125,7 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
             </dl>
           </section>
 
-          <section className="card">
+          <section className="card anim-up">
             <h2 style={{ fontSize: 16, margin: '0 0 10px' }}>Notes</h2>
             <form action={saveNotes}>
               <input type="hidden" name="leadId" value={lead.id} />
@@ -109,17 +135,16 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
           </section>
         </div>
 
-        <section className="card">
+        <section className="card anim-up">
           <h2 style={{ fontSize: 16, margin: '0 0 6px' }}>Timeline</h2>
           <p className="muted" style={{ fontSize: 13, margin: '0 0 6px' }}>{(calls ?? []).length} call{(calls ?? []).length === 1 ? '' : 's'} · {(emails ?? []).length} email{(emails ?? []).length === 1 ? '' : 's'} · newest first</p>
           <ol className="timeline">
             {events.map((e, i) => (
               <li key={i}>
-                <span aria-hidden style={{ textAlign: 'center' }}>{e.icon}</span>
-                <div>
-                  <div>{e.title}</div>
-                  {e.sub && <div className="ink-2" style={{ fontSize: 13 }}>{e.sub}</div>}
-                  <div className="muted" style={{ fontSize: 12 }}>{fmtIst(e.at)}</div>
+                <span className="obj-icon sm" style={{ background: e.icon === '☎' ? 'var(--o-call)' : e.icon === '✉' ? 'var(--o-email)' : e.icon === '✎' ? 'var(--o-contact)' : e.icon === '⏱' ? 'var(--o-dashboard)' : 'var(--o-report)', marginTop: 4 }} aria-hidden>{e.icon}</span>
+                <div className="tl-card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}><div>{e.title}</div><div className="muted" style={{ fontSize: 12 }}>{fmtIst(e.at)}</div></div>
+                  {e.sub && <div className="ink-2" style={{ fontSize: 13, marginTop: 2 }}>{e.sub}</div>}
                 </div>
               </li>
             ))}
